@@ -1,0 +1,84 @@
+.page {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); padding: 24px; position: relative; overflow: hidden;
+}
+
+.gridBg {
+  position: fixed; inset: 0;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px; opacity: 0.25; pointer-events: none;
+}
+
+.card {
+  position: relative; z-index: 5;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--r-xl); padding: 44px 40px;
+  width: 100%; max-width: 420px;
+  box-shadow: var(--shadow-lg); animation: fadeUp 0.4s ease;
+}
+
+/* Brand row */
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+
+.brandIcon {
+  width: 34px; height: 34px; background: var(--accent); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 900; color: #fff; font-size: 0.85rem;
+}
+
+.brandName { font-family: var(--font-display); font-weight: 800; font-size: 1rem; letter-spacing: 0.04em; }
+.brandName em { font-style: normal; color: var(--accent); }
+
+.title { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.01em; }
+.sub   { font-size: 0.875rem; color: var(--text2); margin-bottom: 28px; }
+
+/* Password field */
+.pwdWrap { position: relative; }
+.pwdWrap input { padding-right: 60px; }
+.showBtn {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--accent);
+  font-size: 0.75rem; font-weight: 700; cursor: pointer;
+}
+
+.submitBtn { width: 100%; padding: 14px; font-size: 0.95rem; margin-top: 4px; min-height: 50px; }
+
+.switchLink { text-align: center; font-size: 0.85rem; color: var(--text2); margin-top: 20px; }
+.switchLink span { color: var(--accent); font-weight: 600; cursor: pointer; }
+.switchLink span:hover { text-decoration: underline; }
+
+.hint {
+  margin-top: 16px; padding: 10px 14px;
+  background: var(--surface2); border-radius: var(--r-sm);
+  font-size: 0.75rem; color: var(--text2); text-align: center;
+}:global(.field) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+:global(.field) label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+:global(.field) input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
+  background: #fff;
+  color: var(--text);
+  font-size: 0.95rem;
+  outline: none;
+  transition: var(--t);
+}
+
+:global(.field) input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}

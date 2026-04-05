@@ -1,0 +1,13 @@
+.cart-page,
+.checkout-page {
+  padding: 24px;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: #1e1e1e;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}

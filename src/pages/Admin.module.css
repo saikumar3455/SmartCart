@@ -1,0 +1,196 @@
+.page { min-height: 100vh; background: var(--bg); }
+
+/* Header */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+
+.headerInner {
+  max-width: 1400px; margin: 0 auto;
+  padding: 0 24px; height: 60px;
+  display: flex; align-items: center; gap: 16px;
+}
+
+.logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.logoIcon {
+  width: 32px; height: 32px; background: var(--accent); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 900; color: #fff; font-size: 0.8rem;
+}
+
+.logoText  { font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; }
+.logoText em { font-style: normal; color: var(--accent); }
+.adminLabel  { color: var(--text3); font-style: normal; }
+
+.tabs { display: flex; gap: 2px; margin-left: 24px; }
+
+.tabBtn {
+  padding: 6px 14px; border-radius: var(--r-sm); border: none; cursor: pointer;
+  font-family: var(--font-body); font-weight: 600; font-size: 0.78rem;
+  background: transparent; color: var(--text2); transition: var(--t);
+}
+
+.tabBtn:hover { color: var(--text); background: var(--surface2); }
+.tabActive    { background: var(--accent) !important; color: #fff !important; }
+
+.headerRight { margin-left: auto; display: flex; gap: 8px; }
+
+/* Main */
+.main {
+  max-width: 1400px; margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+
+.pageTitle {
+  font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; margin-bottom: 24px;
+}
+
+/* Dashboard stats */
+.statsGrid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 16px; margin-bottom: 28px;
+}
+
+.statCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 20px;
+  transition: var(--t);
+}
+.statCard:hover { border-color: var(--border2); transform: translateY(-2px); }
+
+.statIcon  { font-size: 1.8rem; margin-bottom: 10px; }
+.statVal   { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+.statLabel { font-size: 0.78rem; color: var(--text3); }
+
+/* Dashboard grid */
+.dashGrid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+
+.dashCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 20px;
+}
+
+.dashCardTitle {
+  font-family: var(--font-display); font-weight: 700;
+  margin-bottom: 16px; font-size: 1rem;
+}
+
+.recentOrder {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+
+.recentOrder:last-child { border-bottom: none; }
+
+.recentOrderId    { font-weight: 600; color: var(--accent); font-size: 0.82rem; }
+.recentOrderEmail { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
+
+/* Category bars */
+.catRow    { margin-bottom: 14px; }
+.catRowTop { display: flex; justify-content: space-between; margin-bottom: 6px; }
+
+.barTrack { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.barFill  { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.6s ease; }
+
+/* Add product form */
+.formCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 24px; margin-bottom: 24px;
+}
+
+.formCardTitle {
+  font-family: var(--font-display); font-weight: 700; margin-bottom: 20px;
+}
+
+.formGrid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+}
+
+.textarea {
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: var(--r-md); padding: 10px 14px;
+  color: var(--text); resize: vertical; width: 100%;
+  font-family: var(--font-body); font-size: 0.9rem;
+  transition: var(--t);
+}
+
+.textarea:focus { border-color: var(--accent); outline: none; }
+
+/* Table */
+.tableWrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-xl); overflow: hidden; overflow-x: auto;
+}
+
+.table { width: 100%; border-collapse: collapse; }
+
+.thead { background: var(--surface2); border-bottom: 1px solid var(--border); }
+
+.th {
+  padding: 12px 16px; text-align: left;
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase; color: var(--text3);
+  white-space: nowrap;
+}
+
+.tr { border-bottom: 1px solid var(--border); transition: var(--t); }
+.tr:last-child { border-bottom: none; }
+.tr:hover { background: rgba(255,255,255,0.02) !important; }
+
+.td {
+  padding: 12px 16px; font-size: 0.875rem; vertical-align: middle;
+}
+
+.tableImg {
+  width: 44px; height: 44px; object-fit: cover;
+  border-radius: var(--r-sm); background: var(--surface2);
+}
+
+.truncate {
+  display: block; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; max-width: 180px;
+}
+
+/* Users avatar */
+.userAvatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; color: var(--text);
+}
+
+/* Orders list */
+.ordersList { display: flex; flex-direction: column; gap: 14px; }
+
+.orderCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 20px; transition: var(--t);
+}
+
+.orderCard:hover { border-color: var(--border2); }
+
+.orderCardTop {
+  display: flex; justify-content: space-between; flex-wrap: wrap;
+  gap: 8px; margin-bottom: 12px; align-items: center;
+}
+
+.orderId   { font-family: var(--font-display); font-weight: 700; color: var(--accent); font-size: 1rem; margin-right: 12px; }
+.orderDate { font-size: 0.75rem; color: var(--text3); }
+
+.orderCardMeta {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  font-size: 0.82rem; color: var(--text2);
+}
+
+/* misc */
+.emptyNote { color: var(--text3); font-size: 0.875rem; padding: 40px 0; text-align: center; }
+
+@media (max-width: 900px) {
+  .statsGrid { grid-template-columns: repeat(2,1fr); }
+  .dashGrid  { grid-template-columns: 1fr; }
+  .formGrid  { grid-template-columns: 1fr 1fr; }
+}

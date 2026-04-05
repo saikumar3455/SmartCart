@@ -1,0 +1,10 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #161616;
+}
+
+.navbar button {
+  margin-left: 10px;
+}

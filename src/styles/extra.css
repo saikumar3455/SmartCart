@@ -1,0 +1,25 @@
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+}
+
+.toast-item {
+  background: #1e1e1e;
+  padding: 10px 14px;
+  margin-top: 8px;
+  border-left: 4px solid orange;
+}
+
+.orders-page,
+.profile-page,
+.product-detail {
+  padding: 24px;
+}
+
+.order-card {
+  background: #1e1e1e;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}

@@ -1,0 +1,73 @@
+.page { min-height: 100vh; background: var(--bg); }
+
+/* Banner */
+.banner {
+  background: linear-gradient(135deg, #1a0800 0%, #2d1000 50%, #0d0d0d 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 40px 20px; text-align: center; position: relative; overflow: hidden;
+}
+
+.bannerGlow {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 50%, rgba(232,67,26,0.15), transparent 60%),
+              radial-gradient(circle at 70% 50%, rgba(232,67,26,0.08), transparent 60%);
+}
+
+.bannerContent { position: relative; z-index: 1; }
+
+.bannerTitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  font-weight: 900; letter-spacing: -0.02em;
+}
+
+.bannerTitle span { color: var(--accent); }
+
+/* Filter bar */
+.filterBar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+}
+
+.filterInner {
+  max-width: 1320px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; gap: 16px; flex-wrap: wrap;
+}
+
+.cats { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.catBtn {
+  padding: 7px 18px; border-radius: 100px; border: none; cursor: pointer;
+  font-family: var(--font-body); font-weight: 600; font-size: 0.78rem;
+  letter-spacing: 0.06em; text-transform: uppercase; transition: var(--t); white-space: nowrap;
+  background: transparent; color: var(--text2);
+}
+
+.catBtn:hover  { background: var(--surface2); color: var(--text); }
+.catActive     { background: var(--accent) !important; color: #fff !important; }
+
+.sortWrap { display: flex; align-items: center; gap: 8px; }
+.sortLabel { font-size: 0.78rem; color: var(--text3); }
+.sortSelect {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 6px 10px;
+  color: var(--text); font-size: 0.8rem;
+}
+
+/* Main */
+.main { max-width: 1320px; margin: 0 auto; padding: 28px 20px 60px; }
+.count { font-size: 0.82rem; color: var(--text3); margin-bottom: 20px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+/* Empty */
+.empty { text-align: center; padding: 80px 20px; }
+.emptyIcon { font-size: 3rem; margin-bottom: 16px; }
+.empty h3 { font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 8px; }
+.empty p  { color: var(--text2); margin-bottom: 24px; }
