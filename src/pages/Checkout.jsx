@@ -61,7 +61,7 @@ export default function Checkout() {
       total: grand,
     };
 
-    const res = await fetch("http://localhost:8000/api/orders", {
+    const res = await fetch("https://smartcart-api-20gg.onrender.com/api/orders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

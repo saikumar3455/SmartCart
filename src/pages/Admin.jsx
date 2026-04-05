@@ -26,14 +26,14 @@ export default function Admin() {
   const [err,      setErr]      = useState("");
 
   useEffect(() => {
-  fetch("http://localhost:8000/api/users")
+  fetch("https://smartcart-api-20gg.onrender.com/api/users")
     .then((res) => res.json())
     .then((data) => setUsers(data))
     .catch((err) => console.log(err));
 }, []);
 
 useEffect(() => {
-  fetch("http://localhost:8000/api/orders")
+  fetch("https://smartcart-api-20gg.onrender.com/api/orders")
     .then((res) => res.json())
     .then((data) => setOrders(data))
     .catch((err) => console.log(err));
@@ -77,7 +77,7 @@ useEffect(() => {
   const updateOrderStatus = async (orderId, status) => {
   try {
     const res = await fetch(
-      `http://localhost:8000/api/orders/${orderId}`,
+      `https://smartcart-api-20gg.onrender.com/api/orders/${orderId}`,
       {
         method: "PUT",
         headers: {

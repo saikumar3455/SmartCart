@@ -43,7 +43,7 @@ export function Login() {
   try {
     setLoading(true);
 
-    const res = await fetch("http://localhost:8000/api/auth/login", {
+    const res = await fetch("https://smartcart-api-20gg.onrender.com/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -155,7 +155,7 @@ export function Signup() {
   try {
     setLoading(true);
 
-    const res = await fetch("http://localhost:8000/api/auth/signup", {
+    const res = await fetch("https://smartcart-api-20gg.onrender.com/api/auth/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
