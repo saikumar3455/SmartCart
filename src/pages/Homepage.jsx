@@ -21,7 +21,7 @@ export default function Homepage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-  fetch("http://localhost:8000/api/products")
+  fetch("https://smartcart-api-20gg.onrender.com/api/products")
     .then((res) => res.json())
     .then((data) => setProducts(data))
     .catch((err) => console.error(err));
