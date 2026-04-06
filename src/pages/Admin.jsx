@@ -26,14 +26,14 @@ export default function Admin() {
   const [err,      setErr]      = useState("");
 
   useEffect(() => {
-  fetch("https://smartcart-api-20gg.onrender.com/api/users")
+  fetch("https://smartcart-api-2ogq.onrender.com/api/users")
     .then((res) => res.json())
     .then((data) => setUsers(data))
     .catch((err) => console.log(err));
 }, []);
 
 useEffect(() => {
-  fetch("https://smartcart-api-20gg.onrender.com/api/orders")
+  fetch("https://smartcart-api-2ogq.onrender.com/api/orders")
     .then((res) => res.json())
     .then((data) => setOrders(data))
     .catch((err) => console.log(err));
@@ -77,7 +77,7 @@ useEffect(() => {
   const updateOrderStatus = async (orderId, status) => {
   try {
     const res = await fetch(
-      `https://smartcart-api-20gg.onrender.com/api/orders/${orderId}`,
+      `https://smartcart-api-2ogq.onrender.com/api/orders/${orderId}`,
       {
         method: "PUT",
         headers: {

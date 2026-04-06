@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import ProductCard from "../components/ProductCard/ProductCard";
 import { useApp } from "../context/AppContext";
-
+import SEED_PRODUCTS from "../data/products";
 import styles from "./Homepage.module.css";
 
 const CATEGORIES = ["all", "mens", "womens", "kids", "accessories"];
@@ -20,11 +20,8 @@ export default function Homepage() {
   const [sort, setSort] = useState("default");
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-  fetch("https://smartcart-api-20gg.onrender.com/api/products")
-    .then((res) => res.json())
-    .then((data) => setProducts(data))
-    .catch((err) => console.error(err));
+useEffect(() => {
+  setProducts(SEED_PRODUCTS);
 }, []);
 
   // also react to Navbar search (simple shared state via window)

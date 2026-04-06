@@ -4,7 +4,7 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-/* ✅ SIGNUP */
+/* SIGNUP */
 router.post("/signup", async (req, res) => {
   try {
     console.log("SIGNUP ROUTE HIT ✅");
@@ -40,7 +40,7 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-/* ✅ LOGIN */
+/* LOGIN */
 router.post("/login", async (req, res) => {
   try {
     console.log("LOGIN ROUTE HIT ✅");
@@ -49,7 +49,6 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    console.log("USER FOUND:", user);
 
     if (!user) {
       return res.status(400).json({
@@ -58,7 +57,6 @@ router.post("/login", async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("PASSWORD MATCH:", isMatch);
 
     if (!isMatch) {
       return res.status(400).json({

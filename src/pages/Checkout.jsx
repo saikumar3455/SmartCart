@@ -41,27 +41,35 @@ export default function Checkout() {
     return true;
   };
 
-  const placeOrder = async () => {
+  const API = "https://smartcart-api-2ogq.onrender.com";
+
+const placeOrder = async () => {
   try {
     setLoading(true);
 
-    const user = JSON.parse(localStorage.getItem("sc_user"));
+    const currentUser = JSON.parse(localStorage.getItem("sc_user"));
 
     const orderData = {
-      userId: user._id,
-      userName: user.name,
-      userEmail: user.email,
+      userId: currentUser._id,
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      shipping,
+      paymentMethod: payment,
       items: cart.map((item) => ({
         productId: item._id,
         name: item.name,
         price: item.price,
-        quantity: item.quantity,
+        quantity: item.quantity || item.qty,
         image: item.image,
       })),
+      subtotal: total,
+      shippingFee,
+      tax,
       total: grand,
+      status: "Placed",
     };
 
-    const res = await fetch("https://smartcart-api-20gg.onrender.com/api/orders", {
+    const res = await fetch(`${API}/api/order`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -69,20 +77,23 @@ export default function Checkout() {
       body: JSON.stringify(orderData),
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
 
     if (!res.ok) {
-      throw new Error(data.message);
+      throw new Error(data.message || "Order failed");
     }
 
-    console.log("Order saved:", data);
+    console.log("✅ Order saved:", data);
 
-    localStorage.removeItem(`sc_cart_${user._id}`);
+    localStorage.removeItem(`sc_cart_${currentUser._id}`);
+    clearCart();
 
+    toast("🎉 Order placed successfully!", "success");
     navigate("success");
   } catch (error) {
-    console.error(error);
-    alert("Order failed");
+    console.error("❌ ORDER ERROR:", error);
+    setErr(error.message || "Order failed");
   } finally {
     setLoading(false);
   }
