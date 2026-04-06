@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
-import { getProducts, setProducts, fmt } from "../utils/helpers";
+import { fmt } from "../utils/helpers";
 import styles from "./Admin.module.css";
 
 const TABS = [
@@ -57,56 +57,65 @@ export default function Admin() {
       .catch((err) => console.log(err));
   }, []);
 
-  const saveProducts = (updated) => {
-    setProducts(updated);
-    setProds(updated);
-  };
+  
 
   const saveUsers = (updated) => {
     setUsers(updated);
   };
 
-  const addProduct = () => {
-    if (!newProd.name || !newProd.price || !newProd.category) {
-      setErr("Fill required fields.");
-      return;
-    }
+  const addProduct = async () => {
+  if (!newProd.name || !newProd.price || !newProd.category) {
+    setErr("Fill required fields.");
+    return;
+  }
 
-    const p = {
-      id: Date.now(),
-      ...newProd,
-      price: Number(newProd.price),
-      stock: Number(newProd.stock),
-    };
+  try {
+    const res = await fetch(
+      "https://smartcart-api-2ogq.onrender.com/api/products",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...newProd,
+          price: Number(newProd.price),
+          stock: Number(newProd.stock),
+        }),
+      }
+    );
 
-    saveProducts([...products, p]);
+    const saved = await res.json();
+
+    setProds((prev) => [...prev, saved]);
     setNewProd(EMPTY_PRODUCT);
     setErr("");
     toast("Product added ✓", "success");
-  };
+  } catch (error) {
+    console.log(error);
+    toast("Failed to add product", "error");
+  }
+};
 
-  const deleteProduct = (id) => {
-    saveProducts(products.filter((p) => p.id !== id));
-    toast("Product deleted", "success");
-  };
-
-  const saveEdit = () => {
-    saveProducts(
-      products.map((p) =>
-        p.id === editProd.id
-          ? {
-              ...editProd,
-              price: Number(editProd.price),
-              stock: Number(editProd.stock),
-            }
-          : p
-      )
+  const deleteProduct = async (id) => {
+  try {
+    await fetch(
+      `https://smartcart-api-2ogq.onrender.com/api/products/${id}`,
+      {
+        method: "DELETE",
+      }
     );
 
-    setEditProd(null);
-    toast("Product updated ✓", "success");
-  };
+    setProds((prev) =>
+      prev.filter((p) => (p._id || p.id) !== id)
+    );
 
+    toast("Product deleted ✓", "success");
+  } catch (error) {
+    console.log(error);
+    toast("Failed to delete product", "error");
+  }
+};
   const deleteUser = (id) => {
     if (!window.confirm("Delete this user? This cannot be undone.")) return;
     saveUsers(users.filter((u) => u._id !== id));
@@ -313,8 +322,35 @@ export default function Admin() {
         {tab === "products" && (
   <div style={{ animation: "fadeUp 0.3s ease" }}>
     <h1 className={styles.pageTitle}>
-      Products ({products.length})
-    </h1>
+  Products ({products.length})
+</h1>
+
+<div style={{ display: "grid", gap: "10px", marginBottom: "20px" }}>
+  <input
+    placeholder="Name"
+    value={newProd.name}
+    onChange={(e) =>
+      setNewProd({ ...newProd, name: e.target.value })
+    }
+  />
+  <input
+    placeholder="Price"
+    value={newProd.price}
+    onChange={(e) =>
+      setNewProd({ ...newProd, price: e.target.value })
+    }
+  />
+  <input
+    placeholder="Image URL"
+    value={newProd.image}
+    onChange={(e) =>
+      setNewProd({ ...newProd, image: e.target.value })
+    }
+  />
+  <button className="btn btn-primary" onClick={addProduct}>
+    ➕ Add Product
+  </button>
+</div>
 
     {products.length === 0 ? (
       <p className={styles.emptyNote}>No products found.</p>
