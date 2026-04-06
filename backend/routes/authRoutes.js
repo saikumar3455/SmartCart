@@ -1,21 +1,23 @@
 import express from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 const router = express.Router();
 
-// SIGNUP
+/* ✅ SIGNUP */
 router.post("/signup", async (req, res) => {
   try {
-    console.log("Signup route hit ✅");
+    console.log("SIGNUP ROUTE HIT ✅");
     console.log(req.body);
 
     const { name, email, password } = req.body;
 
     const existing = await User.findOne({ email });
+
     if (existing) {
-      return res.status(400).json({ message: "Email already exists" });
+      return res.status(400).json({
+        message: "Email already exists",
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -31,15 +33,23 @@ router.post("/signup", async (req, res) => {
       user,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: error.message });
+    console.error("SIGNUP ERROR ❌", error);
+    return res.status(500).json({
+      message: error.message,
+    });
   }
 });
+
+/* ✅ LOGIN */
 router.post("/login", async (req, res) => {
   try {
+    console.log("LOGIN ROUTE HIT ✅");
+    console.log(req.body);
+
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
+    console.log("USER FOUND:", user);
 
     if (!user) {
       return res.status(400).json({
@@ -48,6 +58,7 @@ router.post("/login", async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("PASSWORD MATCH:", isMatch);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -60,6 +71,7 @@ router.post("/login", async (req, res) => {
       user,
     });
   } catch (error) {
+    console.error("LOGIN ERROR ❌", error);
     return res.status(500).json({
       message: error.message,
     });

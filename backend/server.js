@@ -3,36 +3,26 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import authRoutes from "./routes/authRoutes.js";
-import productRoutes from "./routes/productRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
-import userRoutes from "./routes/userRoutes.js"
+
 dotenv.config();
 
 const app = express();
 
-
-app.use(cors({
-  origin: (origin, callback) => {
-    const allowed = [
+app.use(
+  cors({
+    origin: [
       "http://localhost:5173",
-      "https://smart-cart-tz7g.vercel.app"
-    ];
+      "https://smart-cart-tz7g.vercel.app",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
-    if (!origin || allowed.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS blocked"));
-    }
-  },
-  credentials: true
-}));
-
-app.use(cors());
 app.use(express.json());
+
 app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes)
-app.use("/api/orders", orderRoutes)
-app.use("/api/users", userRoutes)
+
 app.get("/", (req, res) => {
   res.send("SmartCart backend + Atlas 🚀");
 });
