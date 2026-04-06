@@ -63,14 +63,14 @@ export default function Admin() {
     setUsers(updated);
   };
 
-  const addProduct = async () => {
+ const addProduct = async () => {
   if (!newProd.name || !newProd.price || !newProd.category) {
     setErr("Fill required fields.");
     return;
   }
 
   try {
-    const res = await fetch(
+    await fetch(
       "https://smartcart-api-2ogq.onrender.com/api/products",
       {
         method: "POST",
@@ -85,9 +85,13 @@ export default function Admin() {
       }
     );
 
-    const saved = await res.json();
+    // 🔥 refetch updated products
+    const res = await fetch(
+      "https://smartcart-api-2ogq.onrender.com/api/products"
+    );
+    const data = await res.json();
+    setProds(data);
 
-    setProds((prev) => [...prev, saved]);
     setNewProd(EMPTY_PRODUCT);
     setErr("");
     toast("Product added ✓", "success");
