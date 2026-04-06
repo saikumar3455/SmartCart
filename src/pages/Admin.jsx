@@ -310,6 +310,50 @@ export default function Admin() {
             </div>
           </div>
         )}
+        {tab === "products" && (
+  <div style={{ animation: "fadeUp 0.3s ease" }}>
+    <h1 className={styles.pageTitle}>
+      Products ({products.length})
+    </h1>
+
+    {products.length === 0 ? (
+      <p className={styles.emptyNote}>No products found.</p>
+    ) : (
+      <div className={styles.ordersList}>
+        {products.map((p) => (
+          <div key={p._id || p.id} className={styles.orderCard}>
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                alignItems: "center",
+              }}
+            >
+              <img
+                src={p.image}
+                alt={p.name}
+                width="60"
+                height="60"
+                style={{
+                  borderRadius: "10px",
+                  objectFit: "cover",
+                }}
+              />
+
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: 0 }}>{p.name}</h3>
+                <p style={{ margin: "4px 0", opacity: 0.7 }}>
+                  {p.category}
+                </p>
+                <p style={{ fontWeight: "bold" }}>₹{p.price}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
         {tab === "users" && (
           <div style={{ animation: "fadeUp 0.3s ease" }}>
