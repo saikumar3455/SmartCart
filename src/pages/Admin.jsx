@@ -27,7 +27,7 @@ export default function Admin() {
   const { navigate, toast } = useApp();
 
   const [tab, setTab] = useState("dashboard");
-  const [products, setProds] = useState(getProducts());
+ const [products, setProds] = useState([]);
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [newProd, setNewProd] = useState(EMPTY_PRODUCT);
@@ -40,6 +40,13 @@ export default function Admin() {
       .then((data) => setUsers(data))
       .catch((err) => console.log(err));
   }, []);
+
+  useEffect(() => {
+  fetch("https://smartcart-api-2ogq.onrender.com/api/products")
+    .then((res) => res.json())
+    .then((data) => setProds(data))
+    .catch((err) => console.log(err));
+}, []);
 
   useEffect(() => {
     fetch("https://smartcart-api-2ogq.onrender.com/api/orders")
@@ -407,10 +414,21 @@ export default function Admin() {
 
                     <div className={styles.orderCardMeta}>
                       <span>👤 {order.userEmail}</span>
-                      <span>
-                        📦 {order.shipping?.city},{" "}
-                        {order.shipping?.state}
-                      </span>
+                     <div>
+  {order.items?.map((item, i) => (
+    <div key={i} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+      <img
+        src={item.image}
+        alt={item.name}
+        width="40"
+        height="40"
+        style={{ borderRadius: "8px", objectFit: "cover" }}
+      />
+      <span>{item.name}</span>
+      <span>₹{item.price}</span>
+    </div>
+  ))}
+</div>
                       <span>
                         💳{" "}
                         {order.payment === "cod"
