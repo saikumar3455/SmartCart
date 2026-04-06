@@ -44,10 +44,12 @@ export default function Admin() {
   useEffect(() => {
   fetch("https://smartcart-api-2ogq.onrender.com/api/products")
     .then((res) => res.json())
-    .then((data) => setProds(data))
-    .catch((err) => console.log(err));
+    .then((data) => {
+      console.log("products:", data);
+      setProds(data);
+    })
+    .catch((err) => console.log("product fetch error", err));
 }, []);
-
   useEffect(() => {
     fetch("https://smartcart-api-2ogq.onrender.com/api/orders")
       .then((res) => res.json())
