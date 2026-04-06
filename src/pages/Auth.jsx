@@ -192,7 +192,7 @@ export function Signup() {
    
     
 
-    setPage("login");
+  
   } catch (error) {
     console.error(error);
     setErr("Server error");
@@ -277,7 +277,7 @@ export function Signup() {
         onClick={handleSignup}
         disabled={loading}
       >
-        {loading ? <span className="spinner" /> : "Create Account →"}
+        {loading ?"Creating" : "Create Account →"}
       </button>
 
       <p className={styles.switchLink}>
