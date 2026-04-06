@@ -8,11 +8,12 @@ const router = express.Router();
 router.post("/signup", async (req, res) => {
   try {
     console.log("SIGNUP ROUTE HIT ✅");
-    console.log(req.body);
+    console.log("BODY:", req.body);
 
     const { name, email, password } = req.body;
 
     const existing = await User.findOne({ email });
+    console.log("EXISTING USER:", existing);
 
     if (existing) {
       return res.status(400).json({
@@ -21,12 +22,15 @@ router.post("/signup", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("HASHED PASSWORD READY ✅");
 
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
     });
+
+    console.log("USER SAVED TO ATLAS ✅", user);
 
     return res.status(201).json({
       message: "Signup successful",
@@ -39,7 +43,6 @@ router.post("/signup", async (req, res) => {
     });
   }
 });
-
 /* LOGIN */
 router.post("/login", async (req, res) => {
   try {
