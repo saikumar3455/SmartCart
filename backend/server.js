@@ -10,6 +10,23 @@ dotenv.config();
 
 const app = express();
 
+
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowed = [
+      "http://localhost:5173",
+      "https://smart-cart-tz7g.vercel.app"
+    ];
+
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS blocked"));
+    }
+  },
+  credentials: true
+}));
+
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);

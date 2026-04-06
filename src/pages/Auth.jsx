@@ -43,32 +43,37 @@ export function Login() {
   try {
     setLoading(true);
 
-    const res = await fetch("https://smartcart-api-20gg.onrender.com/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: form.email,
-        password: form.password,
-      }),
-    });
+    const res = await fetch(
+      "https://smartcart-api-20gg.onrender.com/api/auth/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      }
+    );
 
-    const data = await res.json();
+    const text = await res.text();
+    console.log("RAW RESPONSE:", text);
+
+    const data = text ? JSON.parse(text) : {};
 
     if (!res.ok) {
-      setErr(data.message);
+      setErr(data.message || "Login failed");
       return;
     }
 
     login(data.user);
 
     toast(`Welcome back, ${data.user.name}! 👋`, "success");
-
     navigate(data.user.role === "admin" ? "admin" : "home");
   } catch (error) {
-    console.error(error);
-    setErr("Server error");
+    console.error("LOGIN ERROR:", error);
+    setErr(error.message || "Server error");
   } finally {
     setLoading(false);
   }
