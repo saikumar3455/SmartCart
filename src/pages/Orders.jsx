@@ -18,15 +18,10 @@ export default function Orders() {
     fetch("https://smartcart-api-2ogq.onrender.com/api/orders")
       .then((res) => res.json())
       .then((data) => {
-        const myOrders = data
-          .filter(
-            (o) =>
-              o.userEmail === user.email ||
-              o.userId === user._id
-          )
-          .reverse();
-
-        setOrders(myOrders);
+        const myOrders = data.filter(
+          (o) => o.userEmail === user.email
+        );
+        setOrders(myOrders.reverse());
       })
       .catch((err) => console.log(err))
       .finally(() => setLoading(false));
@@ -67,20 +62,30 @@ export default function Orders() {
                     </p>
                   </div>
 
-                  <div>
-                    <span className="badge badge-success">
-                      {order.status}
-                    </span>
+                  <div style={{ textAlign: "right" }}>
                     <p className={styles.orderTotal}>
                       {fmt(order.total)}
                     </p>
+                    <span className="badge badge-success">
+                      {order.status}
+                    </span>
                   </div>
                 </div>
 
-                <div className={styles.orderMeta}>
-                  <p>📍 {order.shipping?.city}, {order.shipping?.state}</p>
-                  <p>💳 {order.payment}</p>
-                  <p>🛒 {order.items?.length} items</p>
+                <div className={styles.meta}>
+                  <span>
+                    📍 {order.shipping?.city}, {order.shipping?.state}
+                  </span>
+                  <span>
+                    💳{" "}
+                    {order.payment === "cod"
+                      ? "Cash on Delivery"
+                      : order.payment?.toUpperCase()}
+                  </span>
+                  <span>
+                    🛒 {order.items?.length} item
+                    {order.items?.length !== 1 ? "s" : ""}
+                  </span>
                 </div>
               </div>
             ))}
