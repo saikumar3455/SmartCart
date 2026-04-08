@@ -69,7 +69,7 @@ const placeOrder = async () => {
       status: "Placed",
     };
 
-    const res = await fetch(`${API}/api/order`, {
+    const res = await fetch(`${API}/api/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
