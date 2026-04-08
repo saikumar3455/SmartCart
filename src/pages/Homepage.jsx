@@ -21,9 +21,19 @@ export default function Homepage() {
   const [search, setSearch] = useState("");
 
 useEffect(() => {
-  setProducts(SEED_PRODUCTS);
-}, []);
+  fetch("https://smartcart-api-2ogq.onrender.com/api/products")
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("homepage products:", data);
+      setProducts(data);
+    })
+    .catch((err) => {
+      console.log("product fetch error", err);
 
+      // fallback if backend fails
+      setProducts(SEED_PRODUCTS);
+    });
+}, []);
   // also react to Navbar search (simple shared state via window)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -90,7 +100,7 @@ useEffect(() => {
         {filtered.length > 0 ? (
           <div className={styles.grid}>
             {filtered.map((p, i) => (
-              <div key={p.id} style={{ animationDelay: `${i * 0.04}s` }}>
+              <div key={p._id || p.id}style={{ animationDelay: `${i * 0.04}s` }}>
                 <ProductCard product={p} />
               </div>
             ))}
