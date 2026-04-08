@@ -21,18 +21,65 @@ export default function Homepage() {
   const [search, setSearch] = useState("");
 
 useEffect(() => {
-  fetch("https://smartcart-api-2ogq.onrender.com/api/products")
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("homepage products:", data);
-      setProducts(data);
-    })
-    .catch((err) => {
-      console.log("product fetch error", err);
+  Promise.all([
+    fetch("https://smartcart-api-2ogq.onrender.com/api/products").then((res) =>
+      res.json()
+    ),
+    fetch("https://dummyjson.com/products?limit=0").then((res) =>
+      res.json()
+    ),
+  ])
+    .then(async([dbProducts, apiData]) => {
+      const mapped = apiData.products.map((p) => {
+        let mappedCategory = "accessories";
 
-      // fallback if backend fails
-      setProducts(SEED_PRODUCTS);
-    });
+        if (
+          p.category.includes("mens") ||
+          p.category.includes("shirts") ||
+          p.category.includes("shoes")
+        ) {
+          mappedCategory = "mens";
+        } else if (
+          p.category.includes("womens") ||
+          p.category.includes("tops") ||
+          p.category.includes("dresses")
+        ) {
+          mappedCategory = "womens";
+        } else if (
+          p.category.includes("kids")
+        ) {
+          mappedCategory = "kids";
+        } else {
+          mappedCategory = "accessories";
+        }
+
+        return {
+          _id: `dummy-${p.id}`,
+          name: p.title,
+          price: Math.round(p.price * 83),
+          category: mappedCategory,
+          image: p.thumbnail,
+          description: p.description,
+          rating: p.rating,
+          stock: p.stock,
+        };
+      });
+      if (dbProducts.length < 20) {
+  await fetch(
+    "https://smartcart-api-2ogq.onrender.com/api/products/import",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(mapped),
+    }
+  );
+}
+
+      setProducts([...dbProducts, ...mapped]);
+    })
+    .catch((err) => console.log("product fetch error", err));
 }, []);
   // also react to Navbar search (simple shared state via window)
   useEffect(() => {

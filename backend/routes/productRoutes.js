@@ -31,7 +31,6 @@ router.put("/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 // DELETE
 router.delete("/:id", async (req, res) => {
   await Product.findByIdAndDelete(req.params.id);
@@ -42,6 +41,19 @@ router.delete("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   const product = await Product.create(req.body);
   res.status(201).json(product);
+});
+router.post("/import", async (req, res) => {
+  try {
+    const products = req.body;
+
+    const saved = await Product.insertMany(products, {
+      ordered: false,
+    });
+
+    res.json(saved);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 export default router;
