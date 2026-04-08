@@ -329,32 +329,94 @@ export default function Admin() {
   Products ({products.length})
 </h1>
 
-<div style={{ display: "grid", gap: "10px", marginBottom: "20px" }}>
+// Replace your current Add Product form block inside Admin.jsx Products tab
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "12px",
+    marginBottom: "24px",
+    padding: "20px",
+    border: "1px solid #e5e7eb",
+    borderRadius: "16px",
+    background: "#fff",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+  }}
+>
   <input
-    placeholder="Name"
+    placeholder="Product Name"
     value={newProd.name}
-    onChange={(e) =>
-      setNewProd({ ...newProd, name: e.target.value })
-    }
+    onChange={(e) => setNewProd({ ...newProd, name: e.target.value })}
+    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d1d5db" }}
   />
+
   <input
     placeholder="Price"
+    type="number"
     value={newProd.price}
-    onChange={(e) =>
-      setNewProd({ ...newProd, price: e.target.value })
-    }
+    onChange={(e) => setNewProd({ ...newProd, price: e.target.value })}
+    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d1d5db" }}
   />
+
+  <select
+    value={newProd.category}
+    onChange={(e) => setNewProd({ ...newProd, category: e.target.value })}
+    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d1d5db" }}
+  >
+    <option value="mens">Mens</option>
+    <option value="womens">Womens</option>
+    <option value="kids">Kids</option>
+    <option value="accessories">Accessories</option>
+  </select>
+
+  <input
+    placeholder="Stock"
+    type="number"
+    value={newProd.stock}
+    onChange={(e) => setNewProd({ ...newProd, stock: e.target.value })}
+    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d1d5db" }}
+  />
+
   <input
     placeholder="Image URL"
     value={newProd.image}
-    onChange={(e) =>
-      setNewProd({ ...newProd, image: e.target.value })
-    }
+    onChange={(e) => setNewProd({ ...newProd, image: e.target.value })}
+    style={{
+      padding: "12px",
+      borderRadius: "10px",
+      border: "1px solid #d1d5db",
+      gridColumn: "span 2",
+    }}
   />
-  <button className="btn btn-primary" onClick={addProduct}>
+
+  <textarea
+    placeholder="Description"
+    value={newProd.description}
+    onChange={(e) => setNewProd({ ...newProd, description: e.target.value })}
+    rows={3}
+    style={{
+      padding: "12px",
+      borderRadius: "10px",
+      border: "1px solid #d1d5db",
+      gridColumn: "span 2",
+    }}
+  />
+
+  <button
+    className="btn btn-primary"
+    onClick={addProduct}
+    style={{
+      gridColumn: "span 2",
+      padding: "14px",
+      borderRadius: "12px",
+      fontWeight: "700",
+      fontSize: "1rem",
+    }}
+  >
     ➕ Add Product
   </button>
 </div>
+
 
     {products.length === 0 ? (
       <p className={styles.emptyNote}>No products found.</p>
