@@ -120,6 +120,35 @@ export default function Admin() {
     toast("Failed to delete product", "error");
   }
 };
+const saveEdit = async () => {
+  try {
+    const res = await fetch(
+      `https://smartcart-api-2ogq.onrender.com/api/products/${editProd._id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editProd),
+      }
+    );
+
+    if (!res.ok) throw new Error("Update route not found");
+
+    const updated = await res.json();
+
+    setProds((prev) =>
+      prev.map((p) => (p._id === updated._id ? updated : p))
+    );
+
+    setEditProd(null);
+    toast("Product updated ✓", "success");
+  } catch (error) {
+    console.log(error);
+    toast("Update failed", "error");
+  }
+};
+
   const deleteUser = (id) => {
     if (!window.confirm("Delete this user? This cannot be undone.")) return;
     saveUsers(users.filter((u) => u._id !== id));
@@ -323,13 +352,120 @@ export default function Admin() {
             </div>
           </div>
         )}
-        {tab === "products" && (
+       {tab === "products" && (
   <div style={{ animation: "fadeUp 0.3s ease" }}>
     <h1 className={styles.pageTitle}>
-  Products ({products.length})
-</h1>
+      Products ({products.length})
+    </h1>
+{editProd && (
+  <div
+    style={{
+      marginBottom: "24px",
+      padding: "24px",
+      border: "1px solid #e5e7eb",
+      borderRadius: "18px",
+      background: "#fff",
+      boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+    }}
+  >
+    <h2 style={{ marginBottom: "16px" }}>✏️ Edit Product</h2>
 
-// Replace your current Add Product form block inside Admin.jsx Products tab
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(2, 1fr)",
+        gap: "12px",
+      }}
+    >
+      <input
+        placeholder="Product Name"
+        value={editProd.name}
+        onChange={(e) =>
+          setEditProd({ ...editProd, name: e.target.value })
+        }
+        style={{ padding: "12px", borderRadius: "10px" }}
+      />
+
+      <input
+        placeholder="Price"
+        type="number"
+        value={editProd.price}
+        onChange={(e) =>
+          setEditProd({ ...editProd, price: e.target.value })
+        }
+        style={{ padding: "12px", borderRadius: "10px" }}
+      />
+
+      <select
+        value={editProd.category}
+        onChange={(e) =>
+          setEditProd({ ...editProd, category: e.target.value })
+        }
+        style={{ padding: "12px", borderRadius: "10px" }}
+      >
+        <option value="mens">Mens</option>
+        <option value="womens">Womens</option>
+        <option value="kids">Kids</option>
+        <option value="accessories">Accessories</option>
+      </select>
+
+      <input
+        placeholder="Image URL"
+        value={editProd.image}
+        onChange={(e) =>
+          setEditProd({ ...editProd, image: e.target.value })
+        }
+        style={{ padding: "12px", borderRadius: "10px" }}
+      />
+
+      <textarea
+        placeholder="Description"
+        value={editProd.description}
+        onChange={(e) =>
+          setEditProd({
+            ...editProd,
+            description: e.target.value,
+          })
+        }
+        rows={3}
+        style={{
+          padding: "12px",
+          borderRadius: "10px",
+          gridColumn: "span 2",
+        }}
+      />
+
+      {editProd.image && (
+        <div style={{ gridColumn: "span 2" }}>
+          <img
+            src={editProd.image}
+            alt={editProd.name}
+            style={{
+              width: "120px",
+              height: "120px",
+              objectFit: "cover",
+              borderRadius: "12px",
+              border: "1px solid #ddd",
+            }}
+          />
+        </div>
+      )}
+
+      <button
+        className="btn btn-primary"
+        onClick={saveEdit}
+        style={{
+          gridColumn: "span 2",
+          padding: "14px",
+          borderRadius: "12px",
+          fontWeight: "700",
+        }}
+      >
+        💾 Save Changes
+      </button>
+    </div>
+  </div>
+)}
 <div
   style={{
     display: "grid",
@@ -448,9 +584,27 @@ export default function Admin() {
                   {p.category}
                 </p>
                 <p style={{ fontWeight: "bold" }}>₹{p.price}</p>
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+    <button
+      className="btn btn-outline btn-sm"
+      onClick={() => setEditProd(p)}
+    >
+      ✏️ Edit
+    </button>
+
+    <button
+      className="btn btn-danger btn-sm"
+      onClick={() => deleteProduct(p._id)}
+    >
+      🗑 Delete
+    </button>
+  </div>
+</div>
+                
               </div>
+              
             </div>
-          </div>
+         
         ))}
       </div>
     )}

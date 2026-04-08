@@ -73,22 +73,73 @@ export default function Orders() {
                 </div>
 
                 <div className={styles.meta}>
-  <span>
-    📦 {order.items?.map((item) => item.name).join(", ")}
-  </span>
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: "12px",
+                      marginTop: "12px",
+                    }}
+                  >
+                    {order.items?.map((item, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          gap: "12px",
+                          alignItems: "center",
+                          padding: "10px",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "12px",
+                          background: "#fafafa",
+                        }}
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          width="60"
+                          height="60"
+                          style={{
+                            borderRadius: "10px",
+                            objectFit: "cover",
+                          }}
+                        />
 
-  <span>
-    💳{" "}
-    {order.payment === "cod"
-      ? "Cash on Delivery"
-      : order.payment?.toUpperCase()}
-  </span>
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ margin: 0 }}>{item.name}</h4>
+                          <p
+                            style={{
+                              margin: "4px 0",
+                              opacity: 0.7,
+                            }}
+                          >
+                            Qty: {item.qty || 1}
+                          </p>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontWeight: "bold",
+                              color: "#2563eb",
+                            }}
+                          >
+                            ₹{item.price}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-  <span>
-    🛒 {order.items?.length} item
-    {order.items?.length !== 1 ? "s" : ""}
-  </span>
-</div>
+                  <p style={{ marginTop: "12px" }}>
+                    💳{" "}
+                    {order.payment === "cod"
+                      ? "Cash on Delivery"
+                      : order.payment?.toUpperCase()}
+                  </p>
+
+                  <p>
+                    🛒 {order.items?.length} item
+                    {order.items?.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
