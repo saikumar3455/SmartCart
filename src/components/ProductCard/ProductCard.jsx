@@ -1,16 +1,20 @@
+import { useCompare } from "../../context/CompareContext";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { useApp } from "../../context/AppContext";
-import { fmt, getProductKey, stars } from "../../utils/helpers";
+import { fmt, getProductKey, getUrgencyMeta, stars } from "../../utils/helpers";
 import styles from "./ProductCard.module.css";
 
 export default function ProductCard({ product }) {
   const { addToCart, cart } = useCart();
+  const { isCompared, toggleCompare, compareCount } = useCompare();
   const { isWishlisted, toggleWishlist } = useWishlist();
-  const { navigate, setSelectedProduct } = useApp();
+  const { navigate, setSelectedProduct, toast } = useApp();
   const productKey = getProductKey(product);
   const inCart = cart.find((i) => i.id === productKey);
   const wished = isWishlisted(product);
+  const compared = isCompared(product);
+  const urgency = getUrgencyMeta(product);
 
   const handleView = () => {
     setSelectedProduct(product);
@@ -45,6 +49,11 @@ export default function ProductCard({ product }) {
         {product.stock === 0 && (
           <div className={styles.soldOut}><span className="badge badge-dim">Out of Stock</span></div>
         )}
+        {product.stock > 0 && (
+          <div className={`${styles.urgencyPill} ${styles[`urgency${urgency.tone[0].toUpperCase()}${urgency.tone.slice(1)}`] || ""}`}>
+            {urgency.badge}
+          </div>
+        )}
       </div>
 
       <div className={styles.info}>
@@ -56,6 +65,21 @@ export default function ProductCard({ product }) {
             <span className={styles.ratingCount}>({product.reviews})</span>
           </div>
         )}
+        <p className={styles.urgencyText}>{urgency.message}</p>
+        <button
+          className={`${styles.compareBtn} ${compared ? styles.compareActive : ""}`}
+          onClick={() => {
+            if (!compared && compareCount >= 4) {
+              toast("You can compare up to 4 products at a time", "error");
+              return;
+            }
+
+            toggleCompare(product);
+            toast(compared ? "Removed from compare" : "Added to compare", "success");
+          }}
+        >
+          {compared ? "✓ In Compare" : "⇄ Compare"}
+        </button>
         <div className={styles.footer}>
           <span className={styles.price}>{fmt(product.price)}</span>
           <button

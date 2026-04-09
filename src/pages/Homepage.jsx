@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import ProductCard from "../components/ProductCard/ProductCard";
+import { useAuth } from "../context/AuthContext";
+import { useWishlist } from "../context/WishlistContext";
 import { useApp } from "../context/AppContext";
+import { getProductKey, getRecentViews } from "../utils/helpers";
 import styles from "./Homepage.module.css";
 
 const CATEGORIES = ["all", "mens", "womens", "kids", "accessories", "food"];
@@ -15,11 +18,14 @@ const SORT_OPTIONS = [
 
 export default function Homepage() {
   const { navigate } = useApp();
+  const { user } = useAuth();
+  const { wishlist } = useWishlist();
 
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState("default");
   const [search, setSearch] = useState("");
+  const [recentViews, setRecentViews] = useState([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -40,6 +46,11 @@ export default function Homepage() {
 
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    const userKey = user?.email || "guest";
+    setRecentViews(getRecentViews(userKey));
+  }, [user]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -70,6 +81,20 @@ export default function Homepage() {
         ? (b.rating || 0) - (a.rating || 0)
         : 0
     );
+
+  const recommended = products
+    .filter((product) =>
+      wishlist.some((item) => item.category === product.category)
+    )
+    .slice(0, 4);
+
+  const fastMoving = [...products]
+    .filter((product) => Number(product.stock) > 0 && Number(product.stock) <= 8)
+    .slice(0, 4);
+
+  const personalizedRecent = recentViews
+    .map((item) => products.find((product) => getProductKey(product) === getProductKey(item)) || item)
+    .slice(0, 4);
 
   return (
     <div className={styles.page}>
@@ -141,6 +166,67 @@ export default function Homepage() {
           {filtered.length} product
           {filtered.length !== 1 ? "s" : ""} found
         </p>
+
+        {(personalizedRecent.length > 0 || recommended.length > 0 || fastMoving.length > 0) && (
+          <div className={styles.personalizedStack}>
+            {personalizedRecent.length > 0 && (
+              <section className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <p className={styles.sectionEyebrow}>Just for you</p>
+                    <h2 className={styles.sectionTitle}>Recently Viewed</h2>
+                  </div>
+                  <button className="btn btn-outline btn-sm" onClick={() => setCategory("all")}>
+                    Browse Catalog
+                  </button>
+                </div>
+                <div className={styles.sectionGrid}>
+                  {personalizedRecent.map((product) => (
+                    <ProductCard key={getProductKey(product)} product={product} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {recommended.length > 0 && (
+              <section className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <p className={styles.sectionEyebrow}>Because you saved similar pieces</p>
+                    <h2 className={styles.sectionTitle}>Top Picks For You</h2>
+                  </div>
+                  <button className="btn btn-outline btn-sm" onClick={() => navigate("wishlist")}>
+                    View Wishlist
+                  </button>
+                </div>
+                <div className={styles.sectionGrid}>
+                  {recommended.map((product) => (
+                    <ProductCard key={getProductKey(product)} product={product} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {fastMoving.length > 0 && (
+              <section className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <p className={styles.sectionEyebrow}>Selling fast</p>
+                    <h2 className={styles.sectionTitle}>Low Stock Right Now</h2>
+                  </div>
+                  <button className="btn btn-outline btn-sm" onClick={() => setSort("rating")}>
+                    Sort by Rating
+                  </button>
+                </div>
+                <div className={styles.sectionGrid}>
+                  {fastMoving.map((product) => (
+                    <ProductCard key={getProductKey(product)} product={product} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
 
         {filtered.length > 0 ? (
           <div className={styles.grid}>

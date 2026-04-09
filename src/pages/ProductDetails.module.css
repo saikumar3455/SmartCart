@@ -92,6 +92,45 @@
 
 .stockRow { display: flex; }
 
+.urgencyBanner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: var(--r-lg);
+  background: rgba(30, 136, 255, 0.08);
+  border: 1px solid rgba(30, 136, 255, 0.22);
+}
+
+.urgencyBanner strong {
+  font-size: 0.84rem;
+}
+
+.urgencyBanner span {
+  font-size: 0.82rem;
+  color: var(--text2);
+}
+
+.urgencyCritical {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+.urgencyLow {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.urgencyHot {
+  background: rgba(30, 136, 255, 0.08);
+  border-color: rgba(30, 136, 255, 0.22);
+}
+
+.urgencyFresh {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.24);
+}
+
 /* Quantity */
 .qtyRow {
   display: flex;

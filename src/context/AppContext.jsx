@@ -20,6 +20,8 @@ export function AppProvider({ children }) {
       "orders",
       "wishlist",
       "builder",
+      "compare",
+      "notifications",
       "profile",
       "product",
     ].some((page) => target === page || target.startsWith(`${page}/`) || target.startsWith(`${page}?`));

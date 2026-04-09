@@ -5,6 +5,8 @@ import "./App.css";
 import { AuthProvider }    from "./context/AuthContext";
 import { CartProvider }    from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
+import { CompareProvider } from "./context/CompareContext";
+import { NotificationsProvider } from "./context/NotificationsContext";
 import { AppProvider, useApp } from "./context/AppContext";
 
 import Toast           from "./components/Toast";
@@ -22,6 +24,8 @@ import Profile         from "./pages/Profile";
 import Admin           from "./pages/Admin";
 import Wishlist        from "./pages/Wishlist";
 import BundleBuilder   from "./pages/BundleBuilder";
+import ComparePage     from "./pages/ComparePage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 // Seed localStorage with default products + admin user on first load
 
@@ -42,6 +46,8 @@ function Router() {
     orders:  <Orders />,
     wishlist: <Wishlist />,
     builder: <BundleBuilder />,
+    compare: <ComparePage />,
+    notifications: <NotificationsPage />,
     profile: <Profile />,
     admin:   <Admin />,
   };
@@ -87,11 +93,15 @@ export default function App() {
     <AuthProvider>
       <CartProvider>
         <WishlistProvider>
-          <AppProvider>
-            <ErrorBoundary>
-              <Router />
-            </ErrorBoundary>
-          </AppProvider>
+          <CompareProvider>
+            <NotificationsProvider>
+              <AppProvider>
+                <ErrorBoundary>
+                  <Router />
+                </ErrorBoundary>
+              </AppProvider>
+            </NotificationsProvider>
+          </CompareProvider>
         </WishlistProvider>
       </CartProvider>
     </AuthProvider>

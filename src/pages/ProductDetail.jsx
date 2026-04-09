@@ -1,16 +1,22 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import ProductCard from "../components/ProductCard/ProductCard";
+import { useCompare } from "../context/CompareContext";
+import { useNotifications } from "../context/NotificationsContext";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
-import { fmt, getProductKey, stars } from "../utils/helpers";
+import { fmt, getProductKey, getRecentViews, getUrgencyMeta, saveRecentViews, stars } from "../utils/helpers";
 import styles from "./ProductDetails.module.css";
 
 export default function ProductDetails() {
   const { page, selectedProduct, setSelectedProduct, navigate, toast } = useApp();
   const { addToCart, cart } = useCart();
+  const { compareCount, isCompared, toggleCompare } = useCompare();
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { pushNotification } = useNotifications();
+  const { user } = useAuth();
   const [qty, setQty] = useState(1);
   const [product, setProduct] = useState(selectedProduct);
   const [loading, setLoading] = useState(!selectedProduct);
@@ -57,6 +63,15 @@ export default function ProductDetails() {
 
   useEffect(() => {
     if (!product) return;
+
+    const userKey = user?.email || "guest";
+    const currentKey = getProductKey(product);
+    const nextRecent = [
+      product,
+      ...getRecentViews(userKey).filter((item) => getProductKey(item) !== currentKey),
+    ].slice(0, 8);
+
+    saveRecentViews(userKey, nextRecent);
 
     const loadRelatedProducts = async () => {
       try {
@@ -115,12 +130,20 @@ export default function ProductDetails() {
   const productKey = getProductKey(product);
   const inCart  = cart.find((i) => i.id === productKey);
   const wished = isWishlisted(product);
+  const compared = isCompared(product);
   const orig    = Math.round(product.price * 1.25);
   const disc    = Math.round((1 - product.price / orig) * 100);
+  const urgency = getUrgencyMeta(product);
 
   const handleAdd = () => {
     for (let i = 0; i < qty; i++) addToCart(product);
     toast(`Added ${qty}× ${product.name} 🛒`, "success");
+    pushNotification({
+      title: "Cart updated",
+      message: `${product.name} was added to your cart.`,
+      type: "success",
+      link: "cart",
+    });
   };
 
   const perks = [
@@ -179,6 +202,11 @@ export default function ProductDetails() {
               }
             </div>
 
+            <div className={`${styles.urgencyBanner} ${styles[`urgency${urgency.tone[0].toUpperCase()}${urgency.tone.slice(1)}`] || ""}`}>
+              <strong>{urgency.badge}</strong>
+              <span>{urgency.message}</span>
+            </div>
+
             {/* Quantity */}
             <div className={styles.qtyRow}>
               <span className={styles.qtyLabel}>Qty</span>
@@ -209,6 +237,29 @@ export default function ProductDetails() {
                 }}
               >
                 {wished ? "♥ Saved" : "♡ Save"}
+              </button>
+              <button
+                className="btn btn-outline"
+                style={{ padding: 14 }}
+                onClick={() => {
+                  if (!compared && compareCount >= 4) {
+                    toast("You can compare up to 4 products at a time", "error");
+                    return;
+                  }
+
+                  toggleCompare(product);
+                  pushNotification({
+                    title: compared ? "Compare updated" : "Added to compare",
+                    message: compared
+                      ? `${product.name} was removed from compare.`
+                      : `${product.name} is ready in your compare list.`,
+                    type: "info",
+                    link: "compare",
+                  });
+                  toast(compared ? "Removed from compare" : "Added to compare", "success");
+                }}
+              >
+                {compared ? "✓ Compared" : "⇄ Compare"}
               </button>
               <button className="btn btn-dark" style={{ flex: 1, padding: 14 }} disabled={product.stock === 0}
                 onClick={() => { handleAdd(); navigate("cart"); }}>

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
+import { useCompare } from "../../context/CompareContext";
+import { useNotifications } from "../../context/NotificationsContext";
 import { useApp } from "../../context/AppContext";
 import { fmt } from "../../utils/helpers";
 import styles from "./Navbar.module.css";
@@ -10,6 +12,8 @@ export default function Navbar({ showSearch = false }) {
   const { user, logout } = useAuth();
   const { totalItems, total } = useCart();
   const { wishlistCount } = useWishlist();
+  const { compareCount } = useCompare();
+  const { unreadCount } = useNotifications();
   const { navigate, page } = useApp();
   const [search, setSearch] = useState("");
   const [drop, setDrop] = useState(false);
@@ -22,7 +26,9 @@ export default function Navbar({ showSearch = false }) {
   const menuItems = [
     { label: "🏠 Shop",        target: "home"    },
     { label: "✨ Build a Look", target: "builder" },
+    { label: "⇄ Compare",      target: "compare" },
     { label: "♡ Wishlist",    target: "wishlist" },
+    { label: "🔔 Notifications", target: "notifications" },
     { label: "🛒 Cart",        target: "cart"    },
     { label: "📦 My Orders",   target: "orders"  },
     { label: "👤 Profile",     target: "profile" },
@@ -65,6 +71,24 @@ export default function Navbar({ showSearch = false }) {
           >
             <span className={styles.iconGlyph}>{wishlistCount > 0 ? "♥" : "♡"}</span>
             {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
+          </button>
+
+          <button
+            className={styles.iconAction}
+            onClick={() => navigate("compare")}
+            aria-label="Open compare"
+          >
+            <span className={styles.iconGlyph}>⇄</span>
+            {compareCount > 0 && <span className={styles.badge}>{compareCount}</span>}
+          </button>
+
+          <button
+            className={styles.iconAction}
+            onClick={() => navigate("notifications")}
+            aria-label="Open notifications"
+          >
+            <span className={styles.iconGlyph}>🔔</span>
+            {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
           </button>
 
           <button className={styles.cartAction} onClick={() => navigate("cart")}>
