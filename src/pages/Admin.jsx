@@ -301,7 +301,7 @@ const saveEdit = async () => {
 
       <main className={styles.main}>
         {tab === "dashboard" && (
-          <div style={{ animation: "fadeUp 0.3s ease" }}>
+          <div className={styles.tabPanel}>
             <h1 className={styles.pageTitle}>Dashboard Overview</h1>
 
             <div className={styles.statsGrid}>
@@ -363,13 +363,12 @@ const saveEdit = async () => {
                             {o.userEmail}
                           </p>
                         </div>
-                        <div style={{ textAlign: "right" }}>
-                          <p style={{ fontWeight: 700, fontSize: "0.9rem" }}>
+                        <div className={styles.recentOrderMeta}>
+                          <p className={styles.recentOrderAmount}>
                             {fmt(o.total)}
                           </p>
                           <span
-                            className="badge badge-success"
-                            style={{ fontSize: "0.6rem" }}
+                            className={`badge badge-success ${styles.recentOrderStatus}`}
                           >
                             {o.status}
                           </span>
@@ -394,21 +393,10 @@ const saveEdit = async () => {
                   return (
                     <div key={cat} className={styles.catRow}>
                       <div className={styles.catRowTop}>
-                        <span
-                          style={{
-                            textTransform: "capitalize",
-                            fontWeight: 500,
-                            fontSize: "0.85rem",
-                          }}
-                        >
+                        <span className={styles.catLabel}>
                           {cat}
                         </span>
-                        <span
-                          style={{
-                            color: "var(--text3)",
-                            fontSize: "0.78rem",
-                          }}
-                        >
+                        <span className={styles.catCount}>
                           {count} · {pct}%
                         </span>
                       </div>
@@ -426,11 +414,11 @@ const saveEdit = async () => {
           </div>
         )}
        {tab === "products" && (
-  <div style={{ animation: "fadeUp 0.3s ease" }}>
+  <div className={styles.tabPanel}>
     <h1 className={styles.pageTitle}>
       Products ({products.length})
     </h1>
-<div style={{ marginBottom: "16px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+<div className={styles.actionRow}>
   <button
     className="btn btn-outline"
     onClick={importDummyProducts}
@@ -455,31 +443,18 @@ const saveEdit = async () => {
 </div>
 {editProd && (
   <div
-    style={{
-      marginBottom: "24px",
-      padding: "24px",
-      border: "1px solid #e5e7eb",
-      borderRadius: "18px",
-      background: "#fff",
-      boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
-    }}
+    className={styles.editorCard}
   >
-    <h2 style={{ marginBottom: "16px" }}>✏️ Edit Product</h2>
+    <h2 className={styles.editorTitle}>✏️ Edit Product</h2>
 
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(2, 1fr)",
-        gap: "12px",
-      }}
-    >
+    <div className={styles.editorGrid}>
       <input
         placeholder="Product Name"
         value={editProd.name}
         onChange={(e) =>
           setEditProd({ ...editProd, name: e.target.value })
         }
-        style={{ padding: "12px", borderRadius: "10px" }}
+        className={styles.editorInput}
       />
 
       <input
@@ -489,7 +464,7 @@ const saveEdit = async () => {
         onChange={(e) =>
           setEditProd({ ...editProd, price: e.target.value })
         }
-        style={{ padding: "12px", borderRadius: "10px" }}
+        className={styles.editorInput}
       />
 
       <select
@@ -497,7 +472,7 @@ const saveEdit = async () => {
         onChange={(e) =>
           setEditProd({ ...editProd, category: e.target.value })
         }
-        style={{ padding: "12px", borderRadius: "10px" }}
+        className={styles.editorSelect}
       >
         <option value="mens">Mens</option>
         <option value="womens">Womens</option>
@@ -512,7 +487,7 @@ const saveEdit = async () => {
         onChange={(e) =>
           setEditProd({ ...editProd, image: e.target.value })
         }
-        style={{ padding: "12px", borderRadius: "10px" }}
+        className={styles.editorInput}
       />
 
       <textarea
@@ -525,38 +500,22 @@ const saveEdit = async () => {
           })
         }
         rows={3}
-        style={{
-          padding: "12px",
-          borderRadius: "10px",
-          gridColumn: "span 2",
-        }}
+        className={`${styles.editorTextarea} ${styles.fullWidth}`}
       />
 
       {editProd.image && (
-        <div style={{ gridColumn: "span 2" }}>
+        <div className={styles.editorPreviewWrap}>
           <img
             src={editProd.image}
             alt={editProd.name}
-            style={{
-              width: "120px",
-              height: "120px",
-              objectFit: "cover",
-              borderRadius: "12px",
-              border: "1px solid #ddd",
-            }}
+            className={styles.editorPreview}
           />
         </div>
       )}
 
       <button
-        className="btn btn-primary"
+        className={`btn btn-primary ${styles.editorSubmit}`}
         onClick={saveEdit}
-        style={{
-          gridColumn: "span 2",
-          padding: "14px",
-          borderRadius: "12px",
-          fontWeight: "700",
-        }}
       >
         💾 Save Changes
       </button>
@@ -564,23 +523,13 @@ const saveEdit = async () => {
   </div>
 )}
 <div
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: "12px",
-    marginBottom: "24px",
-    padding: "20px",
-    border: "1px solid #e5e7eb",
-    borderRadius: "16px",
-    background: "#fff",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-  }}
+  className={styles.productFormCard}
 >
   <input
     placeholder="Product Name"
     value={newProd.name}
     onChange={(e) => setNewProd({ ...newProd, name: e.target.value })}
-    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d1d5db" }}
+    className={styles.productInput}
   />
 
   <input
@@ -588,13 +537,13 @@ const saveEdit = async () => {
     type="number"
     value={newProd.price}
     onChange={(e) => setNewProd({ ...newProd, price: e.target.value })}
-    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d1d5db" }}
+    className={styles.productInput}
   />
 
   <select
     value={newProd.category}
     onChange={(e) => setNewProd({ ...newProd, category: e.target.value })}
-    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d1d5db" }}
+    className={styles.productSelect}
   >
     <option value="mens">Mens</option>
     <option value="womens">Womens</option>
@@ -608,19 +557,14 @@ const saveEdit = async () => {
     type="number"
     value={newProd.stock}
     onChange={(e) => setNewProd({ ...newProd, stock: e.target.value })}
-    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #d1d5db" }}
+    className={styles.productInput}
   />
 
   <input
     placeholder="Image URL"
     value={newProd.image}
     onChange={(e) => setNewProd({ ...newProd, image: e.target.value })}
-    style={{
-      padding: "12px",
-      borderRadius: "10px",
-      border: "1px solid #d1d5db",
-      gridColumn: "span 2",
-    }}
+    className={`${styles.productInput} ${styles.fullWidth}`}
   />
 
   <textarea
@@ -628,24 +572,12 @@ const saveEdit = async () => {
     value={newProd.description}
     onChange={(e) => setNewProd({ ...newProd, description: e.target.value })}
     rows={3}
-    style={{
-      padding: "12px",
-      borderRadius: "10px",
-      border: "1px solid #d1d5db",
-      gridColumn: "span 2",
-    }}
+    className={`${styles.productTextarea} ${styles.fullWidth}`}
   />
 
   <button
-    className="btn btn-primary"
+    className={`btn btn-primary ${styles.productSubmit}`}
     onClick={addProduct}
-    style={{
-      gridColumn: "span 2",
-      padding: "14px",
-      borderRadius: "12px",
-      fontWeight: "700",
-      fontSize: "1rem",
-    }}
   >
     ➕ Add Product
   </button>
@@ -658,31 +590,22 @@ const saveEdit = async () => {
       <div className={styles.ordersList}>
         {products.map((p) => (
           <div key={p._id || p.id} className={styles.orderCard}>
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                alignItems: "center",
-              }}
-            >
+            <div className={styles.productRow}>
               <img
                 src={p.image}
                 alt={p.name}
                 width="60"
                 height="60"
-                style={{
-                  borderRadius: "10px",
-                  objectFit: "cover",
-                }}
+                className={styles.productThumb}
               />
 
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: 0 }}>{p.name}</h3>
-                <p style={{ margin: "4px 0", opacity: 0.7 }}>
+              <div className={styles.productInfo}>
+                <h3 className={styles.productName}>{p.name}</h3>
+                <p className={styles.productCategory}>
                   {p.category}
                 </p>
-                <p style={{ fontWeight: "bold" }}>₹{p.price}</p>
-                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <p className={styles.productPrice}>₹{p.price}</p>
+                <div className={styles.productActions}>
     <button
       className="btn btn-outline btn-sm"
       onClick={() => setEditProd(p)}
@@ -710,7 +633,7 @@ const saveEdit = async () => {
 )}
 
         {tab === "users" && (
-          <div style={{ animation: "fadeUp 0.3s ease" }}>
+          <div className={styles.tabPanel}>
             <h1 className={styles.pageTitle}>Users ({users.length})</h1>
 
             <div className={styles.tableWrap}>
@@ -741,13 +664,7 @@ const saveEdit = async () => {
                     return (
                       <tr
                         key={u._id}
-                        className={styles.tr}
-                        style={{
-                          background:
-                            i % 2 !== 0
-                              ? "rgba(255,255,255,0.01)"
-                              : "transparent",
-                        }}
+                        className={`${styles.tr} ${i % 2 !== 0 ? styles.userRowAlt : ""}`}
                       >
                         <td className={styles.td}>
                           <div className={styles.userAvatar}>
@@ -778,7 +695,7 @@ const saveEdit = async () => {
         )}
 
         {tab === "orders" && (
-          <div style={{ animation: "fadeUp 0.3s ease" }}>
+          <div className={styles.tabPanel}>
             <h1 className={styles.pageTitle}>All Orders ({orders.length})</h1>
 
             {orders.length === 0 ? (
@@ -814,15 +731,15 @@ const saveEdit = async () => {
 
                     <div className={styles.orderCardMeta}>
                       <span>👤 {order.userEmail}</span>
-                     <div>
+                     <div className={styles.orderItems}>
   {order.items?.map((item, i) => (
-    <div key={i} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+    <div key={i} className={styles.orderItem}>
       <img
         src={item.image}
         alt={item.name}
         width="40"
         height="40"
-        style={{ borderRadius: "8px", objectFit: "cover" }}
+        className={styles.orderItemImage}
       />
       <span>{item.name}</span>
       <span>₹{item.price}</span>
