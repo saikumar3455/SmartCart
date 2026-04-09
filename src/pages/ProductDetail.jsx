@@ -2,7 +2,7 @@ import { useState } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import { useCart } from "../context/CartContext";
 import { useApp } from "../context/AppContext";
-import { fmt, stars } from "../utils/helpers";
+import { fmt, getProductKey, stars } from "../utils/helpers";
 import styles from "./ProductDetails.module.css";
 
 export default function ProductDetails() {
@@ -12,7 +12,8 @@ export default function ProductDetails() {
 
   if (!product) { navigate("home"); return null; }
 
-  const inCart  = cart.find((i) => i.id === product.id);
+  const productKey = getProductKey(product);
+  const inCart  = cart.find((i) => i.id === productKey);
   const orig    = Math.round(product.price * 1.25);
   const disc    = Math.round((1 - product.price / orig) * 100);
 

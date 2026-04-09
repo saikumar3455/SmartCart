@@ -9,6 +9,13 @@ export const stars = (r) =>
     </span>
   ));
 
+export const getProductKey = (product) => String(product?._id || product?.id || "");
+
+export const normalizeCartItem = (product) => ({
+  ...product,
+  id: getProductKey(product),
+});
+
 // localStorage helpers
 export const getProducts = () => JSON.parse(localStorage.getItem("sc_products") || "[]");
 export const setProducts = (p) => localStorage.setItem("sc_products", JSON.stringify(p));

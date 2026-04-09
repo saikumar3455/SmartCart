@@ -24,21 +24,21 @@ export default function Homepage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // fetch DB products
+        // DB products
         const dbRes = await fetch(
           "https://smartcart-api-2ogq.onrender.com/api/products"
         );
         const dbProducts = await dbRes.json();
 
-        // fetch 200 products from external API
+        // External dummy products
         const apiRes = await fetch(
-          "https://dummyjson.com/products?limit=200"
+          "https://dummyjson.com/products?limit=100"
         );
         const apiData = await apiRes.json();
 
         const mapped = apiData.products.map((p) => {
           let mappedCategory = "accessories";
-          const cat = p.category.toLowerCase();
+          const cat = (p.category || "").toLowerCase();
 
           if (
             cat.includes("mens") ||
@@ -62,34 +62,31 @@ export default function Homepage() {
           }
 
           return {
-            _id: `dummy-${p.id}`,
+            id: p.id,
             name: p.title,
             price: Math.round(p.price * 83),
             category: mappedCategory,
             image: p.thumbnail,
             description: p.description,
-            rating: p.rating,
-            stock: p.stock,
+            rating: Number(p.rating) || 4,
+            reviews: Array.isArray(p.reviews)
+              ? p.reviews.length
+              : Number(p.reviews) || 0,
+            stock: p.stock || 10,
           };
         });
 
-        // show products instantly on homepage
-        setProducts([...dbProducts, ...mapped]);
+        // merge DB + dummy without duplicates
+        const merged = [...dbProducts];
 
-        // import into backend DB
-        const importRes = await fetch(
-          "https://smartcart-api-2ogq.onrender.com/api/products/import",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(mapped),
-          }
-        );
+        mapped.forEach((item) => {
+          const exists = merged.some(
+            (db) => db.name?.toLowerCase() === item.name.toLowerCase()
+          );
+          if (!exists) merged.push(item);
+        });
 
-        const importData = await importRes.json();
-        console.log("📦 IMPORT RESPONSE:", importData);
+        setProducts(merged);
       } catch (err) {
         console.log("product fetch error", err);
       }
@@ -98,7 +95,6 @@ export default function Homepage() {
     fetchProducts();
   }, []);
 
-  // navbar search listener
   useEffect(() => {
     const interval = setInterval(() => {
       const s = window.__sc_search ?? "";
@@ -133,7 +129,6 @@ export default function Homepage() {
     <div className={styles.page}>
       <Navbar showSearch />
 
-      {/* Hero */}
       <div className={styles.banner}>
         <div className={styles.bannerGlow} />
         <div className={styles.bannerContent}>
@@ -149,7 +144,6 @@ export default function Homepage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className={styles.filterBar}>
         <div className={styles.filterInner}>
           <div className={styles.cats}>
@@ -185,7 +179,6 @@ export default function Homepage() {
         </div>
       </div>
 
-      {/* Products */}
       <main className={styles.main}>
         <p className={styles.count}>
           {filtered.length} product
@@ -208,16 +201,6 @@ export default function Homepage() {
             <div className={styles.emptyIcon}>🔍</div>
             <h3>No products found</h3>
             <p>Try adjusting your search or filter</p>
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                setCategory("all");
-                window.__sc_search = "";
-                setSearch("");
-              }}
-            >
-              Clear Filters
-            </button>
           </div>
         )}
       </main>

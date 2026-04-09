@@ -7,6 +7,7 @@ import { CartProvider }    from "./context/CartContext";
 import { AppProvider, useApp } from "./context/AppContext";
 
 import Toast           from "./components/Toast";
+import ErrorBoundary   from "./components/ErrorBoundary";
 import Welcome         from "./pages/Welcome";
 import { Login, Signup } from "./pages/Auth";
 import Homepage        from "./pages/Homepage";
@@ -53,7 +54,9 @@ export default function App() {
     <AuthProvider>
       <CartProvider>
         <AppProvider>
-          <Router />
+          <ErrorBoundary>
+            <Router />
+          </ErrorBoundary>
         </AppProvider>
       </CartProvider>
     </AuthProvider>

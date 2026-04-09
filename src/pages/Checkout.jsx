@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar/Navbar";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
-import { fmt, uid, getOrders, setOrders } from "../utils/helpers";
+import { fmt, getProductKey, uid, getOrders, setOrders } from "../utils/helpers";
 import styles from "./Checkout.module.css";
 
 const PAYMENT_OPTIONS = [
@@ -56,7 +56,7 @@ const placeOrder = async () => {
       shipping,
       paymentMethod: payment,
       items: cart.map((item) => ({
-        productId: item._id,
+        productId: getProductKey(item),
         name: item.name,
         price: item.price,
         quantity: item.quantity || item.qty,

@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { AuthContext } from "./AuthContext";
-import { getCart, saveCart } from "../utils/helpers";
+import { getCart, normalizeCartItem, saveCart } from "../utils/helpers";
 
 export const CartContext = createContext();
 
@@ -18,10 +18,11 @@ export function CartProvider({ children }) {
 
   const addToCart = (product) =>
     setCart((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
+      const item = normalizeCartItem(product);
+      const existing = prev.find((i) => i.id === item.id);
       return existing
-        ? prev.map((i) => i.id === product.id ? { ...i, qty: i.qty + 1 } : i)
-        : [...prev, { ...product, qty: 1 }];
+        ? prev.map((i) => i.id === item.id ? { ...i, qty: i.qty + 1 } : i)
+        : [...prev, { ...item, qty: 1 }];
     });
 
   const removeFromCart = (id) => setCart((prev) => prev.filter((i) => i.id !== id));

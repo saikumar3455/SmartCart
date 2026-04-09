@@ -1,12 +1,13 @@
 import { useCart } from "../../context/CartContext";
 import { useApp } from "../../context/AppContext";
-import { fmt, stars } from "../../utils/helpers";
+import { fmt, getProductKey, stars } from "../../utils/helpers";
 import styles from "./ProductCard.module.css";
 
 export default function ProductCard({ product }) {
   const { addToCart, cart } = useCart();
   const { navigate, setSelectedProduct } = useApp();
-  const inCart = cart.find((i) => i.id === product.id);
+  const productKey = getProductKey(product);
+  const inCart = cart.find((i) => i.id === productKey);
 
   const handleView = () => {
     setSelectedProduct(product);

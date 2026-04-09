@@ -38,16 +38,30 @@ router.post("/seed", async (req, res) => {
 /* IMPORT PRODUCTS (duplicate safe) */
 router.post("/import", async (req, res) => {
   try {
-    const products = req.body;
+    const products = Array.isArray(req.body) ? req.body : [];
+
+    if (products.length === 0) {
+      return res.status(400).json({
+        message: "No products provided for import",
+        count: 0,
+      });
+    }
 
     // existing product names
     const existing = await Product.find({}, "name");
     const existingNames = new Set(existing.map((p) => p.name));
 
+    const seenInBatch = new Set();
+
     // only fresh products
-    const newProducts = products.filter(
-      (p) => !existingNames.has(p.name)
-    );
+    const newProducts = products.filter((p) => {
+      if (!p?.name) return false;
+      if (existingNames.has(p.name)) return false;
+      if (seenInBatch.has(p.name)) return false;
+
+      seenInBatch.add(p.name);
+      return true;
+    });
 
     if (newProducts.length === 0) {
       return res.json({
@@ -61,6 +75,7 @@ router.post("/import", async (req, res) => {
     res.json({
       message: `${saved.length} products imported`,
       count: saved.length,
+      totalReceived: products.length,
     });
   } catch (error) {
     console.error("IMPORT ERROR:", error);
