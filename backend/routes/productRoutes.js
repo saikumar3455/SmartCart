@@ -3,6 +3,41 @@ import Product from "../models/Product.js";
 
 const router = express.Router();
 
+const mapDummyProduct = (p) => {
+  let mappedCategory = "accessories";
+  const cat = (p.category || "").toLowerCase();
+
+  if (
+    cat.includes("mens") ||
+    cat.includes("shirts") ||
+    cat.includes("shoes") ||
+    cat.includes("tops")
+  ) {
+    mappedCategory = "mens";
+  } else if (
+    cat.includes("womens") ||
+    cat.includes("dress") ||
+    cat.includes("beauty") ||
+    cat.includes("skincare")
+  ) {
+    mappedCategory = "womens";
+  } else if (cat.includes("kids") || cat.includes("baby")) {
+    mappedCategory = "kids";
+  }
+
+  return {
+    id: p.id,
+    name: p.title,
+    price: Math.round(p.price * 83),
+    category: mappedCategory,
+    image: p.thumbnail,
+    description: p.description,
+    rating: p.rating,
+    reviews: Array.isArray(p.reviews) ? p.reviews.length : Number(p.reviews) || 0,
+    stock: p.stock,
+  };
+};
+
 /* GET ALL PRODUCTS */
 router.get("/", async (req, res) => {
   try {
@@ -79,6 +114,62 @@ router.post("/import", async (req, res) => {
     });
   } catch (error) {
     console.error("IMPORT ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post("/import-dummy", async (req, res) => {
+  try {
+    const response = await fetch("https://dummyjson.com/products?limit=200");
+
+    if (!response.ok) {
+      return res.status(502).json({
+        message: "Failed to fetch dummy products",
+      });
+    }
+
+    const data = await response.json();
+    const incomingProducts = Array.isArray(data?.products)
+      ? data.products.map(mapDummyProduct)
+      : [];
+
+    if (incomingProducts.length === 0) {
+      return res.status(400).json({
+        message: "No dummy products received",
+        count: 0,
+      });
+    }
+
+    const existing = await Product.find({}, "name");
+    const existingNames = new Set(existing.map((p) => p.name));
+    const seenInBatch = new Set();
+
+    const newProducts = incomingProducts.filter((p) => {
+      if (!p?.name) return false;
+      if (existingNames.has(p.name)) return false;
+      if (seenInBatch.has(p.name)) return false;
+
+      seenInBatch.add(p.name);
+      return true;
+    });
+
+    if (newProducts.length === 0) {
+      return res.json({
+        message: "No new dummy products to import",
+        count: 0,
+        totalReceived: incomingProducts.length,
+      });
+    }
+
+    const saved = await Product.insertMany(newProducts);
+
+    res.json({
+      message: `${saved.length} dummy products imported`,
+      count: saved.length,
+      totalReceived: incomingProducts.length,
+    });
+  } catch (error) {
+    console.error("DUMMY IMPORT ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 });

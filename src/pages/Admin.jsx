@@ -25,6 +25,7 @@ const EMPTY_PRODUCT = {
 export default function Admin() {
   const { user } = useAuth();
   const { navigate, toast } = useApp();
+  const API = "https://smartcart-api-2ogq.onrender.com";
 
   const [tab, setTab] = useState("dashboard");
  const [products, setProds] = useState([]);
@@ -33,25 +34,27 @@ export default function Admin() {
   const [newProd, setNewProd] = useState(EMPTY_PRODUCT);
   const [editProd, setEditProd] = useState(null);
   const [err, setErr] = useState("");
+  const [importingDummy, setImportingDummy] = useState(false);
+
+  const loadProducts = async () => {
+    const res = await fetch(`${API}/api/products`);
+    const data = await res.json();
+    console.log("products:", data);
+    setProds(data);
+  };
 
   useEffect(() => {
-    fetch("https://smartcart-api-2ogq.onrender.com/api/users")
+    fetch(`${API}/api/users`)
       .then((res) => res.json())
       .then((data) => setUsers(data))
       .catch((err) => console.log(err));
   }, []);
 
   useEffect(() => {
-  fetch("https://smartcart-api-2ogq.onrender.com/api/products")
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("products:", data);
-      setProds(data);
-    })
-    .catch((err) => console.log("product fetch error", err));
+  loadProducts().catch((err) => console.log("product fetch error", err));
 }, []);
   useEffect(() => {
-    fetch("https://smartcart-api-2ogq.onrender.com/api/orders")
+    fetch(`${API}/api/orders`)
       .then((res) => res.json())
       .then((data) => setOrders(data))
       .catch((err) => console.log(err));
@@ -71,7 +74,7 @@ export default function Admin() {
 
   try {
     await fetch(
-      "https://smartcart-api-2ogq.onrender.com/api/products",
+      `${API}/api/products`,
       {
         method: "POST",
         headers: {
@@ -85,12 +88,7 @@ export default function Admin() {
       }
     );
 
-    // 🔥 refetch updated products
-    const res = await fetch(
-      "https://smartcart-api-2ogq.onrender.com/api/products"
-    );
-    const data = await res.json();
-    setProds(data);
+    await loadProducts();
 
     setNewProd(EMPTY_PRODUCT);
     setErr("");
@@ -104,7 +102,7 @@ export default function Admin() {
   const deleteProduct = async (id) => {
   try {
     await fetch(
-      `https://smartcart-api-2ogq.onrender.com/api/products/${id}`,
+      `${API}/api/products/${id}`,
       {
         method: "DELETE",
       }
@@ -123,7 +121,7 @@ export default function Admin() {
 const saveEdit = async () => {
   try {
     const res = await fetch(
-      `https://smartcart-api-2ogq.onrender.com/api/products/${editProd._id}`,
+      `${API}/api/products/${editProd._id}`,
       {
         method: "PUT",
         headers: {
@@ -160,7 +158,7 @@ const saveEdit = async () => {
   const updateOrderStatus = async (orderId, status) => {
     try {
       const res = await fetch(
-        `https://smartcart-api-2ogq.onrender.com/api/orders/${orderId}`,
+        `${API}/api/orders/${orderId}`,
         {
           method: "PUT",
           headers: {
@@ -180,6 +178,30 @@ const saveEdit = async () => {
     } catch (error) {
       console.log(error);
       toast("Failed to update order", "error");
+    }
+  };
+
+  const importDummyProducts = async () => {
+    try {
+      setImportingDummy(true);
+
+      const res = await fetch(`${API}/api/products/import-dummy`, {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Dummy import failed");
+      }
+
+      await loadProducts();
+      toast(data.message || "Dummy products imported ✓", "success");
+    } catch (error) {
+      console.log(error);
+      toast(error.message || "Failed to import dummy products", "error");
+    } finally {
+      setImportingDummy(false);
     }
   };
 
@@ -357,6 +379,15 @@ const saveEdit = async () => {
     <h1 className={styles.pageTitle}>
       Products ({products.length})
     </h1>
+<div style={{ marginBottom: "16px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+  <button
+    className="btn btn-outline"
+    onClick={importDummyProducts}
+    disabled={importingDummy}
+  >
+    {importingDummy ? "Importing Dummy Products..." : "Import 200 Dummy Products"}
+  </button>
+</div>
 {editProd && (
   <div
     style={{
