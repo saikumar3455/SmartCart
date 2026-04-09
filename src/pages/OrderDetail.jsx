@@ -151,7 +151,13 @@ export default function OrderDetail() {
                   <h2 className={styles.cardTitle}>Payment Summary</h2>
                   <div className={styles.summaryRow}>
                     <span>Payment</span>
-                    <span>{order.paymentMethod || "Cash on Delivery"}</span>
+                    <span>
+                      {order.paymentMethod === "cod"
+                        ? "Cash on Delivery"
+                        : order.paymentMethod === "demo"
+                          ? "Demo Online Payment"
+                          : order.paymentMethod || "Cash on Delivery"}
+                    </span>
                   </div>
                   <div className={styles.summaryRow}>
                     <span>Subtotal</span>

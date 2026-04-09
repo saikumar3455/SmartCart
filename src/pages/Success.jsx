@@ -33,7 +33,7 @@ export default function Success() {
 
             <div className={styles.details}>
               <p>📦 Delivering to: <strong>{last.shipping?.city}, {last.shipping?.state}</strong></p>
-              <p>💳 Payment: <strong>{last.payment === "cod" ? "Cash on Delivery" : last.payment?.toUpperCase()}</strong></p>
+              <p>💳 Payment: <strong>{last.paymentMethod === "cod" ? "Cash on Delivery" : last.paymentMethod === "demo" ? "Demo Online Payment" : last.paymentMethod?.toUpperCase()}</strong></p>
               <p>📅 Estimated delivery: <strong>3–5 business days</strong></p>
             </div>
 

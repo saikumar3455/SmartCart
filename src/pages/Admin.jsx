@@ -935,9 +935,11 @@ const saveEdit = async () => {
 </div>
                       <span>
                         💳{" "}
-                        {order.payment === "cod"
+                        {order.paymentMethod === "cod"
                           ? "Cash on Delivery"
-                          : order.payment?.toUpperCase()}
+                          : order.paymentMethod === "demo"
+                            ? "Demo Online Payment"
+                            : order.paymentMethod?.toUpperCase()}
                       </span>
                       <span>
                         🛒 {order.items?.length} item

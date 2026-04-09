@@ -20,6 +20,14 @@ const orderSchema = new mongoose.Schema(
       pincode: String,
     },
     paymentMethod: String,
+    paymentStatus: {
+      type: String,
+      default: "pending",
+    },
+    couponCode: String,
+    discount: Number,
+    razorpayOrderId: String,
+    razorpayPaymentId: String,
     
     items: [
       {

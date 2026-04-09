@@ -10,9 +10,7 @@ import styles from "./Checkout.module.css";
 
 const PAYMENT_OPTIONS = [
   { val: "cod",        label: "💵 Cash on Delivery",    sub: "Pay when your order arrives"        },
-  { val: "upi",        label: "📱 UPI / QR Code",        sub: "Google Pay, PhonePe, Paytm"         },
-  { val: "card",       label: "💳 Credit / Debit Card",  sub: "Visa, Mastercard, RuPay"            },
-  { val: "netbanking", label: "🏦 Net Banking",          sub: "All major banks supported"           },
+  { val: "demo",       label: "💳 Demo Online Payment", sub: "Mock card, UPI, or netbanking flow for project review" },
 ];
 
 export default function Checkout() {
@@ -74,50 +72,75 @@ export default function Checkout() {
     }));
   }, [selectedAddressId, savedAddresses, user]);
 
+const saveOrder = async (orderData) => {
+  const res = await fetch(`${API}/api/orders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(orderData),
+  });
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : {};
+
+  if (!res.ok) {
+    throw new Error(data.message || "Order failed");
+  }
+
+  return data;
+};
+
+const buildOrderData = (currentUser, paymentMeta = {}) => ({
+  userId: currentUser._id,
+  userName: currentUser.name,
+  userEmail: currentUser.email,
+  shipping,
+  paymentMethod: payment,
+  paymentStatus: payment === "cod" ? "pending" : "paid",
+  items: cart.map((item) => ({
+    productId: getProductKey(item),
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity || item.qty,
+    image: item.image,
+  })),
+  subtotal: total,
+  shippingFee,
+  discount,
+  couponCode: coupon?.code || "",
+  tax,
+  total: grand,
+  status: "Placed",
+  razorpayOrderId: paymentMeta.orderId || "",
+  razorpayPaymentId: paymentMeta.paymentId || "",
+});
+
 const placeOrder = async () => {
   try {
     setLoading(true);
 
     const currentUser = JSON.parse(localStorage.getItem("sc_user"));
 
-    const orderData = {
-      userId: currentUser._id,
-      userName: currentUser.name,
-      userEmail: currentUser.email,
-      shipping,
-      paymentMethod: payment,
-      items: cart.map((item) => ({
-        productId: getProductKey(item),
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity || item.qty,
-        image: item.image,
-      })),
-      subtotal: total,
-      shippingFee,
-      discount,
-      couponCode: coupon?.code || "",
-      tax,
-      total: grand,
-      status: "Placed",
-    };
+    if (payment === "demo") {
+      const confirmed = window.confirm(
+        `Demo payment of ${fmt(grand)}\n\nThis is a mock online payment for project review only. Click OK to simulate a successful payment.`
+      );
 
-    const res = await fetch(`${API}/api/orders`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(orderData),
-    });
+      if (!confirmed) {
+        throw new Error("Demo payment cancelled");
+      }
 
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : {};
+      const orderData = buildOrderData(currentUser, {
+        orderId: `demo_order_${Date.now()}`,
+        paymentId: `demo_pay_${Date.now()}`,
+      });
 
-    if (!res.ok) {
-      throw new Error(data.message || "Order failed");
+      await saveOrder(orderData);
+    } else {
+      const orderData = buildOrderData(currentUser);
+      await saveOrder(orderData);
     }
-
-    console.log("✅ Order saved:", data);
 
     localStorage.removeItem(`sc_cart_${currentUser._id}`);
     clearCart();

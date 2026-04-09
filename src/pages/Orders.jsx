@@ -130,9 +130,11 @@ export default function Orders() {
 
                   <p style={{ marginTop: "12px" }}>
                     💳{" "}
-                    {order.payment === "cod"
+                    {order.paymentMethod === "cod"
                       ? "Cash on Delivery"
-                      : order.payment?.toUpperCase()}
+                      : order.paymentMethod === "demo"
+                        ? "Demo Online Payment"
+                        : order.paymentMethod?.toUpperCase()}
                   </p>
 
                   <p>
