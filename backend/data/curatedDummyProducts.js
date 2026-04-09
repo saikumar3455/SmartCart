@@ -1,70 +1,83 @@
-const createSeries = ({ startId, count, category, titlePrefix, description, priceStart, priceStep, stockStart, imageBase, ratingBase, reviewsBase }) =>
-  Array.from({ length: count }, (_, index) => ({
-    id: startId + index,
-    source: "curated-catalog",
-    externalSourceId: startId + index,
-    name: `${titlePrefix} ${index + 1}`,
-    price: priceStart + index * priceStep,
-    category,
-    image: `${imageBase}${index + 1}`,
-    description,
-    rating: Number((ratingBase + (index % 5) * 0.1).toFixed(1)),
-    reviews: reviewsBase + index * 3,
-    stock: stockStart + (index % 18),
-  }));
+const buildImage = (label, tone) =>
+  `https://placehold.co/600x600/${tone}/ffffff?text=${encodeURIComponent(label)}`;
 
-const mens = createSeries({
+const createCatalog = ({ startId, category, count, tones, descriptors, items, description, priceBase, priceStep, stockBase, ratingBase, reviewsBase }) =>
+  Array.from({ length: count }, (_, index) => {
+    const descriptor = descriptors[index % descriptors.length];
+    const item = items[index % items.length];
+    const name = `${descriptor} ${item}`;
+
+    return {
+      id: startId + index,
+      source: "curated-catalog",
+      externalSourceId: startId + index,
+      name,
+      price: priceBase + index * priceStep,
+      category,
+      image: buildImage(name, tones[index % tones.length]),
+      description,
+      rating: Number((ratingBase + (index % 4) * 0.1).toFixed(1)),
+      reviews: reviewsBase + index * 4,
+      stock: stockBase + (index % 20),
+    };
+  });
+
+const mens = createCatalog({
   startId: 1001,
-  count: 55,
   category: "mens",
-  titlePrefix: "Men's Everyday Style",
-  description: "Curated menswear piece for casual, office, and weekend styling.",
-  priceStart: 899,
+  count: 55,
+  tones: ["1f4d7a", "395b64", "0f766e", "1d4ed8"],
+  descriptors: ["Classic", "Urban", "Modern", "Relaxed", "Tailored", "Weekend", "Essential", "Premium"],
+  items: ["Cotton Shirt", "Polo Tee", "Chino Pant", "Casual Jacket", "Denim Shirt", "Linen Trouser", "Crew Neck Tee"],
+  description: "Curated menswear piece designed for versatile everyday styling.",
+  priceBase: 899,
   priceStep: 45,
-  stockStart: 18,
-  imageBase: "https://picsum.photos/seed/mens-style-",
+  stockBase: 18,
   ratingBase: 4.2,
   reviewsBase: 40,
 });
 
-const womens = createSeries({
+const womens = createCatalog({
   startId: 2001,
-  count: 55,
   category: "womens",
-  titlePrefix: "Women's Signature Look",
-  description: "Curated womenswear piece designed for everyday elegance and comfort.",
-  priceStart: 999,
+  count: 55,
+  tones: ["a21caf", "be185d", "e11d48", "db2777"],
+  descriptors: ["Elegant", "Everyday", "Chic", "Soft", "Graceful", "Bold", "Signature", "Contemporary"],
+  items: ["Maxi Dress", "Satin Blouse", "Relaxed Kurti", "Flared Top", "Tailored Blazer", "Printed Skirt", "Co-ord Set"],
+  description: "Curated womenswear piece for effortless styling across work, festive, and casual looks.",
+  priceBase: 999,
   priceStep: 50,
-  stockStart: 16,
-  imageBase: "https://picsum.photos/seed/womens-style-",
+  stockBase: 16,
   ratingBase: 4.3,
   reviewsBase: 52,
 });
 
-const kids = createSeries({
+const kids = createCatalog({
   startId: 3001,
-  count: 40,
   category: "kids",
-  titlePrefix: "Kids Play Collection",
-  description: "Bright, comfortable kidswear made for active days and easy styling.",
-  priceStart: 499,
+  count: 40,
+  tones: ["ea580c", "0284c7", "16a34a", "7c3aed"],
+  descriptors: ["Happy", "Playtime", "Comfy", "Bright", "Fun", "Adventure", "Active", "Sunny"],
+  items: ["Graphic Tee", "Cotton Shorts", "Denim Dungaree", "Printed Hoodie", "Jogger Set", "Casual Dress"],
+  description: "Comfort-first kidswear made for playtime, movement, and cheerful everyday looks.",
+  priceBase: 499,
   priceStep: 28,
-  stockStart: 20,
-  imageBase: "https://picsum.photos/seed/kids-style-",
+  stockBase: 20,
   ratingBase: 4.1,
   reviewsBase: 18,
 });
 
-const accessories = createSeries({
+const accessories = createCatalog({
   startId: 4001,
-  count: 72,
   category: "accessories",
-  titlePrefix: "Accessory Edit",
-  description: "Versatile accessory to complete outfits across daily, festive, and work looks.",
-  priceStart: 299,
+  count: 72,
+  tones: ["475569", "334155", "7c2d12", "0f172a"],
+  descriptors: ["Minimal", "Daily", "Travel", "Statement", "Classic", "Bold", "Refined", "Compact"],
+  items: ["Sling Bag", "Watch", "Sunglasses", "Wallet", "Handbag", "Cap", "Backpack", "Sneaker", "Belt"],
+  description: "Curated accessory designed to finish everyday outfits with function and style.",
+  priceBase: 299,
   priceStep: 22,
-  stockStart: 24,
-  imageBase: "https://picsum.photos/seed/accessory-style-",
+  stockBase: 24,
   ratingBase: 4.0,
   reviewsBase: 25,
 });

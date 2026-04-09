@@ -111,6 +111,12 @@ router.post("/import-dummy", async (req, res) => {
       $or: [
         { source: "dummyjson" },
         { source: "curated-catalog" },
+        {
+          $and: [
+            { source: { $exists: false } },
+            { id: { $gte: 13, $lte: 500 } },
+          ],
+        },
       ],
     });
 
