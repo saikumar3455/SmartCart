@@ -201,7 +201,7 @@ const saveEdit = async () => {
       }
 
       await loadProducts();
-      toast(data.message || "Dummy products imported ✓", "success");
+      toast(data.message || "Curated dummy products imported ✓", "success");
     } catch (error) {
       console.log(error);
       toast(error.message || "Failed to import dummy products", "error");
@@ -436,7 +436,7 @@ const saveEdit = async () => {
     onClick={importDummyProducts}
     disabled={importingDummy}
   >
-    {importingDummy ? "Importing Dummy Products..." : "Import 200 Dummy Products"}
+    {importingDummy ? "Importing Curated Dummy Products..." : "Reset & Import Curated Dummy Products"}
   </button>
   <button
     className="btn btn-outline"

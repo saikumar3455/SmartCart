@@ -6,9 +6,14 @@ const router = express.Router();
 const FOOD_PATTERN =
   /grocer|grocery|food|drink|beverage|snack|meal|coffee|tea|juice|soda|cola|chips|chocolate|cookie|biscuit|rice|oil|masala|spice|sauce|noodle|pasta|bread|milk|cheese|butter|fruit|vegetable|honey/i;
 
-const mapDummyProduct = (p) => {
-  let mappedCategory = "accessories";
-  const cat = (p.category || "").toLowerCase();
+const TARGET_DUMMY_COUNTS = {
+  mens: 50,
+  womens: 50,
+  kids: 40,
+};
+
+const getMappedCategory = (rawCategory = "") => {
+  const cat = rawCategory.toLowerCase();
 
   if (
     cat.includes("vehicle") ||
@@ -20,32 +25,51 @@ const mapDummyProduct = (p) => {
   }
 
   if (
+    cat.includes("grocer") ||
+    cat.includes("grocery") ||
+    cat.includes("food") ||
+    cat.includes("drink") ||
+    cat.includes("beverage")
+  ) {
+    return "food";
+  }
+
+  if (
     cat.includes("mens") ||
     cat.includes("shirts") ||
     cat.includes("shoes") ||
     cat.includes("tops")
   ) {
-    mappedCategory = "mens";
-  } else if (
+    return "mens";
+  }
+
+  if (
     cat.includes("womens") ||
     cat.includes("dress") ||
     cat.includes("beauty") ||
     cat.includes("skincare")
   ) {
-    mappedCategory = "womens";
-  } else if (cat.includes("kids") || cat.includes("baby")) {
-    mappedCategory = "kids";
-  } else if (
-    cat.includes("grocer") ||
-    cat.includes("food") ||
-    cat.includes("drink") ||
-    cat.includes("beverage")
-  ) {
-    mappedCategory = "food";
+    return "womens";
+  }
+
+  if (cat.includes("kids") || cat.includes("baby")) {
+    return "kids";
+  }
+
+  return "accessories";
+};
+
+const mapDummyProduct = (p) => {
+  const mappedCategory = getMappedCategory(p.category || "");
+
+  if (!mappedCategory || mappedCategory === "food") {
+    return null;
   }
 
   return {
     id: p.id,
+    source: "dummyjson",
+    externalSourceId: p.id,
     name: p.title,
     price: Math.round(p.price * 83),
     category: mappedCategory,
@@ -55,6 +79,44 @@ const mapDummyProduct = (p) => {
     reviews: Array.isArray(p.reviews) ? p.reviews.length : Number(p.reviews) || 0,
     stock: p.stock,
   };
+};
+
+const buildCuratedDummyProducts = (products) => {
+  const grouped = {
+    mens: products.filter((product) => product.category === "mens"),
+    womens: products.filter((product) => product.category === "womens"),
+    kids: products.filter((product) => product.category === "kids"),
+    accessories: products.filter((product) => product.category === "accessories"),
+  };
+
+  const pickedKeys = new Set();
+  const curated = [];
+
+  ["mens", "womens", "kids"].forEach((category) => {
+    grouped[category].slice(0, TARGET_DUMMY_COUNTS[category]).forEach((product) => {
+      const key = `${product.source}-${product.externalSourceId}`;
+      if (pickedKeys.has(key)) return;
+      pickedKeys.add(key);
+      curated.push(product);
+    });
+  });
+
+  grouped.accessories.forEach((product) => {
+    const key = `${product.source}-${product.externalSourceId}`;
+    if (pickedKeys.has(key)) return;
+    pickedKeys.add(key);
+    curated.push(product);
+  });
+
+  products.forEach((product) => {
+    if (curated.length >= 200) return;
+    const key = `${product.source}-${product.externalSourceId}`;
+    if (pickedKeys.has(key)) return;
+    pickedKeys.add(key);
+    curated.push(product);
+  });
+
+  return curated.slice(0, 200);
 };
 
 /* GET ALL PRODUCTS */
@@ -166,22 +228,23 @@ router.post("/import-dummy", async (req, res) => {
     }
 
     const data = await response.json();
-    const incomingProducts = Array.isArray(data?.products)
-      ? data.products.map(mapDummyProduct).filter(Boolean)
-      : [];
+    const rawProducts = Array.isArray(data?.products) ? data.products : [];
+    const incomingProducts = rawProducts.map(mapDummyProduct).filter(Boolean);
+    const curatedProducts = buildCuratedDummyProducts(incomingProducts);
+    const dummyNames = rawProducts.map((product) => product.title).filter(Boolean);
 
-    if (incomingProducts.length === 0) {
-      return res.status(400).json({
-        message: "No dummy products received",
-        count: 0,
-      });
-    }
+    await Product.deleteMany({
+      $or: [
+        { source: "dummyjson" },
+        { name: { $in: dummyNames } },
+      ],
+    });
 
     const existing = await Product.find({}, "name");
     const existingNames = new Set(existing.map((p) => p.name));
     const seenInBatch = new Set();
 
-    const newProducts = incomingProducts.filter((p) => {
+    const newProducts = curatedProducts.filter((p) => {
       if (!p?.name) return false;
       if (existingNames.has(p.name)) return false;
       if (seenInBatch.has(p.name)) return false;
@@ -191,19 +254,23 @@ router.post("/import-dummy", async (req, res) => {
     });
 
     if (newProducts.length === 0) {
-      return res.json({
-        message: "No new dummy products to import",
+      return res.status(400).json({
+        message: "No curated dummy products available to import",
         count: 0,
-        totalReceived: incomingProducts.length,
       });
     }
 
     const saved = await Product.insertMany(newProducts);
+    const categoryCounts = saved.reduce((acc, product) => {
+      acc[product.category] = (acc[product.category] || 0) + 1;
+      return acc;
+    }, {});
 
     res.json({
-      message: `${saved.length} dummy products imported`,
+      message: `${saved.length} curated dummy products imported`,
       count: saved.length,
-      totalReceived: incomingProducts.length,
+      totalReceived: curatedProducts.length,
+      categories: categoryCounts,
     });
   } catch (error) {
     console.error("DUMMY IMPORT ERROR:", error);

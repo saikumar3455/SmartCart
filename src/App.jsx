@@ -64,6 +64,15 @@ function Router() {
     );
   }
 
+  if (page.startsWith("builder")) {
+    return (
+      <>
+        <BundleBuilder />
+        <Toast />
+      </>
+    );
+  }
+
   return (
     <>
       {pages[page] ?? <Welcome />}

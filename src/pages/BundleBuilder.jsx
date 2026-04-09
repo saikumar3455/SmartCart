@@ -14,11 +14,16 @@ const BUNDLE_SLOTS = [
 
 export default function BundleBuilder() {
   const { addItemsToCart } = useCart();
-  const { navigate, setSelectedProduct, toast } = useApp();
+  const { page, navigate, setSelectedProduct, toast } = useApp();
   const [products, setProducts] = useState([]);
   const [activeSlot, setActiveSlot] = useState("hero");
   const [selected, setSelected] = useState({});
   const [loading, setLoading] = useState(true);
+
+  const shareQuery = useMemo(() => {
+    const params = new URLSearchParams(page.split("?")[1] || "");
+    return params.get("look") || "";
+  }, [page]);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -38,6 +43,27 @@ export default function BundleBuilder() {
     loadProducts();
   }, []);
 
+  useEffect(() => {
+    if (!products.length || !shareQuery) return;
+
+    const ids = shareQuery.split(",").filter(Boolean);
+    if (!ids.length) return;
+
+    const nextSelected = {};
+
+    BUNDLE_SLOTS.forEach((slot, index) => {
+      const id = ids[index];
+      if (!id) return;
+      const product = products.find((item) => getProductKey(item) === id);
+      if (product) nextSelected[slot.id] = product;
+    });
+
+    if (Object.keys(nextSelected).length > 0) {
+      setSelected(nextSelected);
+      toast("Shared look loaded", "info");
+    }
+  }, [products, shareQuery, toast]);
+
   const selectedItems = useMemo(
     () => BUNDLE_SLOTS.map((slot) => selected[slot.id]).filter(Boolean),
     [selected]
@@ -56,6 +82,34 @@ export default function BundleBuilder() {
   }, [products, selected, selectedKeys]);
 
   const bundleTotal = selectedItems.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const shareableIds = BUNDLE_SLOTS.map((slot) => selected[slot.id] ? getProductKey(selected[slot.id]) : "").filter(Boolean);
+
+  const shareLook = async () => {
+    if (!shareableIds.length) {
+      toast("Pick at least one piece before sharing", "info");
+      return;
+    }
+
+    const shareUrl = `${window.location.origin}/#builder?look=${shareableIds.join(",")}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "My SmartCart outfit bundle",
+          text: "Check out this look I built on SmartCart",
+          url: shareUrl,
+        });
+        toast("Look shared successfully", "success");
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareUrl);
+      toast("Share link copied to clipboard", "success");
+    } catch (error) {
+      console.log("share look error", error);
+      toast("Couldn't share this look right now", "error");
+    }
+  };
 
   const addBundleToCart = () => {
     if (!selectedItems.length) {
@@ -87,6 +141,9 @@ export default function BundleBuilder() {
             <p className={styles.summaryMeta}>{selectedItems.length} of {BUNDLE_SLOTS.length} pieces selected</p>
             <button className="btn btn-primary" style={{ width: "100%", marginTop: 16 }} onClick={addBundleToCart}>
               Add Full Look to Cart
+            </button>
+            <button className="btn btn-outline" style={{ width: "100%", marginTop: 10 }} onClick={shareLook}>
+              Share This Look
             </button>
           </div>
         </section>

@@ -22,7 +22,7 @@ export function AppProvider({ children }) {
       "builder",
       "profile",
       "product",
-    ].some((page) => target === page || target.startsWith(`${page}/`));
+    ].some((page) => target === page || target.startsWith(`${page}/`) || target.startsWith(`${page}?`));
 
   const getInitialPage = () => {
     const hashPage = window.location.hash.replace("#", "");
