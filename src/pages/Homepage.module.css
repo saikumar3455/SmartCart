@@ -23,6 +23,21 @@
 
 .bannerTitle span { color: var(--accent); }
 
+.bannerSub {
+  max-width: 46ch;
+  margin: 14px auto 0;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.65;
+}
+
+.bannerActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
 /* Filter bar */
 .filterBar {
   background: var(--surface);

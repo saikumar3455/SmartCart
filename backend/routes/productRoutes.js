@@ -8,6 +8,15 @@ const mapDummyProduct = (p) => {
   const cat = (p.category || "").toLowerCase();
 
   if (
+    cat.includes("vehicle") ||
+    cat.includes("car") ||
+    cat.includes("motorcycle") ||
+    cat.includes("automotive")
+  ) {
+    return null;
+  }
+
+  if (
     cat.includes("mens") ||
     cat.includes("shirts") ||
     cat.includes("shoes") ||
@@ -23,6 +32,13 @@ const mapDummyProduct = (p) => {
     mappedCategory = "womens";
   } else if (cat.includes("kids") || cat.includes("baby")) {
     mappedCategory = "kids";
+  } else if (
+    cat.includes("grocer") ||
+    cat.includes("food") ||
+    cat.includes("drink") ||
+    cat.includes("beverage")
+  ) {
+    mappedCategory = "food";
   }
 
   return {
@@ -148,7 +164,7 @@ router.post("/import-dummy", async (req, res) => {
 
     const data = await response.json();
     const incomingProducts = Array.isArray(data?.products)
-      ? data.products.map(mapDummyProduct)
+      ? data.products.map(mapDummyProduct).filter(Boolean)
       : [];
 
     if (incomingProducts.length === 0) {
@@ -188,6 +204,25 @@ router.post("/import-dummy", async (req, res) => {
     });
   } catch (error) {
     console.error("DUMMY IMPORT ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/cleanup-cars", async (req, res) => {
+  try {
+    const result = await Product.deleteMany({
+      $or: [
+        { category: { $in: ["cars", "vehicles", "automotive", "motorcycle"] } },
+        { name: /car|vehicle|motorcycle/i },
+        { description: /car|vehicle|motorcycle/i },
+      ],
+    });
+
+    res.json({
+      message: `${result.deletedCount} vehicle products removed`,
+      count: result.deletedCount,
+    });
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });

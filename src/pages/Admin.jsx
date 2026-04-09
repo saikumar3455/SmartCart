@@ -35,12 +35,16 @@ export default function Admin() {
   const [editProd, setEditProd] = useState(null);
   const [err, setErr] = useState("");
   const [importingDummy, setImportingDummy] = useState(false);
+  const [cleaningCars, setCleaningCars] = useState(false);
 
   const loadProducts = async () => {
     const res = await fetch(`${API}/api/products`);
     const data = await res.json();
     console.log("products:", data);
-    setProds(data);
+    const safeProducts = Array.isArray(data)
+      ? data.filter((product) => product.category !== "cars" && product.category !== "vehicles")
+      : [];
+    setProds(safeProducts);
   };
 
   useEffect(() => {
@@ -205,6 +209,29 @@ const saveEdit = async () => {
     }
   };
 
+  const cleanupCars = async () => {
+    try {
+      setCleaningCars(true);
+      const res = await fetch(`${API}/api/products/cleanup-cars`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Vehicle cleanup failed");
+      }
+
+      await loadProducts();
+      toast(data.message || "Vehicle products removed", "success");
+    } catch (error) {
+      console.log(error);
+      toast(error.message || "Failed to remove vehicle products", "error");
+    } finally {
+      setCleaningCars(false);
+    }
+  };
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -332,7 +359,7 @@ const saveEdit = async () => {
                 <h3 className={styles.dashCardTitle}>
                   Products by Category
                 </h3>
-                {["mens", "womens", "kids", "accessories"].map((cat) => {
+                {["mens", "womens", "kids", "accessories", "food"].map((cat) => {
                   const count = products.filter(
                     (p) => p.category === cat
                   ).length;
@@ -387,6 +414,13 @@ const saveEdit = async () => {
   >
     {importingDummy ? "Importing Dummy Products..." : "Import 200 Dummy Products"}
   </button>
+  <button
+    className="btn btn-outline"
+    onClick={cleanupCars}
+    disabled={cleaningCars}
+  >
+    {cleaningCars ? "Removing Vehicle Products..." : "Remove Vehicle Products"}
+  </button>
 </div>
 {editProd && (
   <div
@@ -438,6 +472,7 @@ const saveEdit = async () => {
         <option value="womens">Womens</option>
         <option value="kids">Kids</option>
         <option value="accessories">Accessories</option>
+        <option value="food">Food</option>
       </select>
 
       <input
@@ -534,6 +569,7 @@ const saveEdit = async () => {
     <option value="womens">Womens</option>
     <option value="kids">Kids</option>
     <option value="accessories">Accessories</option>
+    <option value="food">Food</option>
   </select>
 
   <input

@@ -21,6 +21,7 @@ export default function Navbar({ showSearch = false }) {
 
   const menuItems = [
     { label: "🏠 Shop",        target: "home"    },
+    { label: "✨ Build a Look", target: "builder" },
     { label: "♡ Wishlist",    target: "wishlist" },
     { label: "🛒 Cart",        target: "cart"    },
     { label: "📦 My Orders",   target: "orders"  },

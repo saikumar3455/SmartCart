@@ -4,7 +4,7 @@ import ProductCard from "../components/ProductCard/ProductCard";
 import { useApp } from "../context/AppContext";
 import styles from "./Homepage.module.css";
 
-const CATEGORIES = ["all", "mens", "womens", "kids", "accessories"];
+const CATEGORIES = ["all", "mens", "womens", "kids", "accessories", "food"];
 
 const SORT_OPTIONS = [
   { value: "default", label: "Featured" },
@@ -28,7 +28,10 @@ export default function Homepage() {
           "https://smartcart-api-2ogq.onrender.com/api/products"
         );
         const dbProducts = await dbRes.json();
-        setProducts(Array.isArray(dbProducts) ? dbProducts : []);
+        const safeProducts = Array.isArray(dbProducts)
+          ? dbProducts.filter((product) => product.category !== "cars" && product.category !== "vehicles")
+          : [];
+        setProducts(safeProducts);
       } catch (err) {
         console.log("product fetch error", err);
         setProducts([]);
@@ -84,6 +87,17 @@ export default function Homepage() {
           <h2 className={styles.bannerTitle}>
             Discover Your <span>Style</span>
           </h2>
+          <p className={styles.bannerSub}>
+            Curate your next fit, save favorites, and build a full look in one place.
+          </p>
+          <div className={styles.bannerActions}>
+            <button className="btn btn-primary" onClick={() => navigate("builder")}>
+              Build an Outfit
+            </button>
+            <button className="btn btn-outline" onClick={() => navigate("wishlist")}>
+              Open Wishlist
+            </button>
+          </div>
         </div>
       </div>
 

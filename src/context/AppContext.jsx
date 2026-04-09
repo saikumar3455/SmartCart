@@ -19,6 +19,7 @@ export function AppProvider({ children }) {
       "success",
       "orders",
       "wishlist",
+      "builder",
       "profile",
       "product",
     ].some((page) => target === page || target.startsWith(`${page}/`));

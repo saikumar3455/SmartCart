@@ -21,6 +21,7 @@ import Orders          from "./pages/Orders";
 import Profile         from "./pages/Profile";
 import Admin           from "./pages/Admin";
 import Wishlist        from "./pages/Wishlist";
+import BundleBuilder   from "./pages/BundleBuilder";
 
 // Seed localStorage with default products + admin user on first load
 
@@ -40,6 +41,7 @@ function Router() {
     success: <Success />,
     orders:  <Orders />,
     wishlist: <Wishlist />,
+    builder: <BundleBuilder />,
     profile: <Profile />,
     admin:   <Admin />,
   };
