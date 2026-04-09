@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/Navbar/Navbar";
+import { useCart } from "../context/CartContext";
 import { useApp } from "../context/AppContext";
 import { fmt } from "../utils/helpers";
 import styles from "./OrderDetail.module.css";
@@ -7,7 +8,8 @@ import styles from "./OrderDetail.module.css";
 const TIMELINE = ["Placed", "Packed", "Shipped", "Delivered"];
 
 export default function OrderDetail() {
-  const { page, navigate } = useApp();
+  const { addItemsToCart } = useCart();
+  const { page, navigate, toast } = useApp();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -79,6 +81,16 @@ export default function OrderDetail() {
               <div className={styles.heroRight}>
                 <span className="badge badge-success">{order.status}</span>
                 <p className={styles.total}>{fmt(order.total)}</p>
+                <button
+                  className={`btn btn-primary ${styles.reorderBtn}`}
+                  onClick={() => {
+                    addItemsToCart(order.items || []);
+                    toast("Items from this order were added to cart", "success");
+                    navigate("cart");
+                  }}
+                >
+                  Reorder All
+                </button>
               </div>
             </div>
 

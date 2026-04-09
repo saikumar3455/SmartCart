@@ -62,6 +62,10 @@
   margin-top: 10px;
 }
 
+.reorderBtn {
+  margin-top: 14px;
+}
+
 .timeline {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
