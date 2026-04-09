@@ -10,7 +10,9 @@ import styles from "./Checkout.module.css";
 
 const PAYMENT_OPTIONS = [
   { val: "cod",        label: "💵 Cash on Delivery",    sub: "Pay when your order arrives"        },
-  { val: "demo",       label: "💳 Demo Online Payment", sub: "Mock card, UPI, or netbanking flow for project review" },
+  { val: "upi",        label: "📱 UPI / QR Code",       sub: "Mock PhonePe, Google Pay, Paytm demo flow" },
+  { val: "card",       label: "💳 Credit / Debit Card", sub: "Mock Visa, Mastercard, RuPay demo flow" },
+  { val: "netbanking", label: "🏦 Net Banking",         sub: "Mock online banking flow for project review" },
 ];
 
 export default function Checkout() {
@@ -122,9 +124,9 @@ const placeOrder = async () => {
 
     const currentUser = JSON.parse(localStorage.getItem("sc_user"));
 
-    if (payment === "demo") {
+    if (payment !== "cod") {
       const confirmed = window.confirm(
-        `Demo payment of ${fmt(grand)}\n\nThis is a mock online payment for project review only. Click OK to simulate a successful payment.`
+        `Demo payment of ${fmt(grand)} via ${PAYMENT_OPTIONS.find((option) => option.val === payment)?.label || "Online Payment"}\n\nThis is a mock online payment for project review only. Click OK to simulate a successful payment.`
       );
 
       if (!confirmed) {

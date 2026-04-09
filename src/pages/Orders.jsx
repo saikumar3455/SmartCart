@@ -132,8 +132,12 @@ export default function Orders() {
                     💳{" "}
                     {order.paymentMethod === "cod"
                       ? "Cash on Delivery"
-                      : order.paymentMethod === "demo"
-                        ? "Demo Online Payment"
+                      : order.paymentMethod === "upi"
+                        ? "UPI / QR Code"
+                        : order.paymentMethod === "card"
+                          ? "Credit / Debit Card"
+                          : order.paymentMethod === "netbanking"
+                            ? "Net Banking"
                         : order.paymentMethod?.toUpperCase()}
                   </p>
 

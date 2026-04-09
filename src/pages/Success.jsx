@@ -10,6 +10,16 @@ export default function Success() {
   const orders         = getOrders();
   const myOrders       = orders.filter((o) => o.userId === user?.id || o.userEmail === user?.email);
   const last           = myOrders[myOrders.length - 1];
+  const paymentLabel =
+    last?.paymentMethod === "cod"
+      ? "Cash on Delivery"
+      : last?.paymentMethod === "upi"
+        ? "UPI / QR Code"
+        : last?.paymentMethod === "card"
+          ? "Credit / Debit Card"
+          : last?.paymentMethod === "netbanking"
+            ? "Net Banking"
+            : last?.paymentMethod?.toUpperCase();
 
   return (
     <div className={styles.page}>
@@ -33,7 +43,7 @@ export default function Success() {
 
             <div className={styles.details}>
               <p>📦 Delivering to: <strong>{last.shipping?.city}, {last.shipping?.state}</strong></p>
-              <p>💳 Payment: <strong>{last.paymentMethod === "cod" ? "Cash on Delivery" : last.paymentMethod === "demo" ? "Demo Online Payment" : last.paymentMethod?.toUpperCase()}</strong></p>
+              <p>💳 Payment: <strong>{paymentLabel}</strong></p>
               <p>📅 Estimated delivery: <strong>3–5 business days</strong></p>
             </div>
 
