@@ -1,9 +1,11 @@
 import express from "express";
+import { createRequire } from "module";
 import Product from "../models/Product.js";
-import CURATED_DUMMY_PRODUCTS from "../data/curatedDummyProducts.js";
 import SEED_PRODUCTS from "../../src/data/products.js";
 
 const router = express.Router();
+const require = createRequire(import.meta.url);
+const LOCAL_DUMMY_PRODUCTS = require("../data/localDummyProducts.json");
 
 const FOOD_PATTERN =
   /grocer|grocery|food|drink|beverage|snack|meal|coffee|tea|juice|soda|cola|chips|chocolate|cookie|biscuit|rice|oil|masala|spice|sauce|noodle|pasta|bread|milk|cheese|butter|fruit|vegetable|honey/i;
@@ -125,7 +127,7 @@ router.post("/import-dummy", async (req, res) => {
     const existingNames = new Set(existing.map((p) => p.name));
     const seenInBatch = new Set();
 
-    const newProducts = CURATED_DUMMY_PRODUCTS.filter((p) => {
+    const newProducts = LOCAL_DUMMY_PRODUCTS.filter((p) => {
       if (!p?.name) return false;
       if (existingNames.has(p.name)) return false;
       if (seenInBatch.has(p.name)) return false;
@@ -148,9 +150,9 @@ router.post("/import-dummy", async (req, res) => {
     }, {});
 
     res.json({
-      message: `${saved.length} curated catalog products imported`,
+      message: `${saved.length} local json products imported`,
       count: saved.length,
-      totalReceived: CURATED_DUMMY_PRODUCTS.length,
+      totalReceived: LOCAL_DUMMY_PRODUCTS.length,
       categories: categoryCounts,
     });
   } catch (error) {
