@@ -1,123 +1,11 @@
 import express from "express";
 import Product from "../models/Product.js";
+import CURATED_DUMMY_PRODUCTS from "../data/curatedDummyProducts.js";
 
 const router = express.Router();
 
 const FOOD_PATTERN =
   /grocer|grocery|food|drink|beverage|snack|meal|coffee|tea|juice|soda|cola|chips|chocolate|cookie|biscuit|rice|oil|masala|spice|sauce|noodle|pasta|bread|milk|cheese|butter|fruit|vegetable|honey/i;
-
-const TARGET_DUMMY_COUNTS = {
-  mens: 50,
-  womens: 50,
-  kids: 40,
-};
-
-const getMappedCategory = (rawCategory = "") => {
-  const cat = rawCategory.toLowerCase();
-
-  if (
-    cat.includes("vehicle") ||
-    cat.includes("car") ||
-    cat.includes("motorcycle") ||
-    cat.includes("automotive")
-  ) {
-    return null;
-  }
-
-  if (
-    cat.includes("grocer") ||
-    cat.includes("grocery") ||
-    cat.includes("food") ||
-    cat.includes("drink") ||
-    cat.includes("beverage")
-  ) {
-    return "food";
-  }
-
-  if (
-    cat.includes("mens") ||
-    cat.includes("shirts") ||
-    cat.includes("shoes") ||
-    cat.includes("tops")
-  ) {
-    return "mens";
-  }
-
-  if (
-    cat.includes("womens") ||
-    cat.includes("dress") ||
-    cat.includes("beauty") ||
-    cat.includes("skincare")
-  ) {
-    return "womens";
-  }
-
-  if (cat.includes("kids") || cat.includes("baby")) {
-    return "kids";
-  }
-
-  return "accessories";
-};
-
-const mapDummyProduct = (p) => {
-  const mappedCategory = getMappedCategory(p.category || "");
-
-  if (!mappedCategory || mappedCategory === "food") {
-    return null;
-  }
-
-  return {
-    id: p.id,
-    source: "dummyjson",
-    externalSourceId: p.id,
-    name: p.title,
-    price: Math.round(p.price * 83),
-    category: mappedCategory,
-    image: p.thumbnail,
-    description: p.description,
-    rating: p.rating,
-    reviews: Array.isArray(p.reviews) ? p.reviews.length : Number(p.reviews) || 0,
-    stock: p.stock,
-  };
-};
-
-const buildCuratedDummyProducts = (products) => {
-  const grouped = {
-    mens: products.filter((product) => product.category === "mens"),
-    womens: products.filter((product) => product.category === "womens"),
-    kids: products.filter((product) => product.category === "kids"),
-    accessories: products.filter((product) => product.category === "accessories"),
-  };
-
-  const pickedKeys = new Set();
-  const curated = [];
-
-  ["mens", "womens", "kids"].forEach((category) => {
-    grouped[category].slice(0, TARGET_DUMMY_COUNTS[category]).forEach((product) => {
-      const key = `${product.source}-${product.externalSourceId}`;
-      if (pickedKeys.has(key)) return;
-      pickedKeys.add(key);
-      curated.push(product);
-    });
-  });
-
-  grouped.accessories.forEach((product) => {
-    const key = `${product.source}-${product.externalSourceId}`;
-    if (pickedKeys.has(key)) return;
-    pickedKeys.add(key);
-    curated.push(product);
-  });
-
-  products.forEach((product) => {
-    if (curated.length >= 200) return;
-    const key = `${product.source}-${product.externalSourceId}`;
-    if (pickedKeys.has(key)) return;
-    pickedKeys.add(key);
-    curated.push(product);
-  });
-
-  return curated.slice(0, 200);
-};
 
 /* GET ALL PRODUCTS */
 router.get("/", async (req, res) => {
@@ -219,24 +107,10 @@ router.post("/import", async (req, res) => {
 
 router.post("/import-dummy", async (req, res) => {
   try {
-    const response = await fetch("https://dummyjson.com/products?limit=200");
-
-    if (!response.ok) {
-      return res.status(502).json({
-        message: "Failed to fetch dummy products",
-      });
-    }
-
-    const data = await response.json();
-    const rawProducts = Array.isArray(data?.products) ? data.products : [];
-    const incomingProducts = rawProducts.map(mapDummyProduct).filter(Boolean);
-    const curatedProducts = buildCuratedDummyProducts(incomingProducts);
-    const dummyNames = rawProducts.map((product) => product.title).filter(Boolean);
-
     await Product.deleteMany({
       $or: [
         { source: "dummyjson" },
-        { name: { $in: dummyNames } },
+        { source: "curated-catalog" },
       ],
     });
 
@@ -244,7 +118,7 @@ router.post("/import-dummy", async (req, res) => {
     const existingNames = new Set(existing.map((p) => p.name));
     const seenInBatch = new Set();
 
-    const newProducts = curatedProducts.filter((p) => {
+    const newProducts = CURATED_DUMMY_PRODUCTS.filter((p) => {
       if (!p?.name) return false;
       if (existingNames.has(p.name)) return false;
       if (seenInBatch.has(p.name)) return false;
@@ -255,7 +129,7 @@ router.post("/import-dummy", async (req, res) => {
 
     if (newProducts.length === 0) {
       return res.status(400).json({
-        message: "No curated dummy products available to import",
+        message: "No curated catalog products available to import",
         count: 0,
       });
     }
@@ -267,9 +141,9 @@ router.post("/import-dummy", async (req, res) => {
     }, {});
 
     res.json({
-      message: `${saved.length} curated dummy products imported`,
+      message: `${saved.length} curated catalog products imported`,
       count: saved.length,
-      totalReceived: curatedProducts.length,
+      totalReceived: CURATED_DUMMY_PRODUCTS.length,
       categories: categoryCounts,
     });
   } catch (error) {
