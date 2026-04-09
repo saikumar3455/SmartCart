@@ -28,3 +28,6 @@ export const setOrders = (o) => localStorage.setItem("sc_orders", JSON.stringify
 
 export const getCart = (u) => JSON.parse(localStorage.getItem(`sc_cart_${u}`) || "[]");
 export const saveCart = (u, c) => localStorage.setItem(`sc_cart_${u}`, JSON.stringify(c));
+
+export const getWishlist = (u) => JSON.parse(localStorage.getItem(`sc_wishlist_${u}`) || "[]");
+export const saveWishlist = (u, w) => localStorage.setItem(`sc_wishlist_${u}`, JSON.stringify(w));

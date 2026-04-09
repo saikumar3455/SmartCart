@@ -1,19 +1,120 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar/Navbar";
+import ProductCard from "../components/ProductCard/ProductCard";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import { useApp } from "../context/AppContext";
 import { fmt, getProductKey, stars } from "../utils/helpers";
 import styles from "./ProductDetails.module.css";
 
 export default function ProductDetails() {
-  const { selectedProduct: product, navigate, toast } = useApp();
+  const { page, selectedProduct, setSelectedProduct, navigate, toast } = useApp();
   const { addToCart, cart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [qty, setQty] = useState(1);
+  const [product, setProduct] = useState(selectedProduct);
+  const [loading, setLoading] = useState(!selectedProduct);
+  const [error, setError] = useState("");
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const productId = page.startsWith("product/") ? page.replace("product/", "") : "";
 
-  if (!product) { navigate("home"); return null; }
+  useEffect(() => {
+    if (selectedProduct && getProductKey(selectedProduct) === productId) {
+      setProduct(selectedProduct);
+      setLoading(false);
+      setError("");
+      return;
+    }
+
+    if (!productId) {
+      setError("Product not found.");
+      setLoading(false);
+      return;
+    }
+
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`https://smartcart-api-2ogq.onrender.com/api/products/${productId}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Product not found");
+        }
+
+        setProduct(data);
+        setSelectedProduct(data);
+        setError("");
+      } catch (err) {
+        setError(err.message || "Product not found");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProduct();
+  }, [page, productId, selectedProduct, setSelectedProduct]);
+
+  useEffect(() => {
+    if (!product) return;
+
+    const loadRelatedProducts = async () => {
+      try {
+        const res = await fetch("https://smartcart-api-2ogq.onrender.com/api/products");
+        const data = await res.json();
+        const currentKey = getProductKey(product);
+
+        if (!Array.isArray(data)) {
+          setRelatedProducts([]);
+          return;
+        }
+
+        const related = data
+          .filter((item) => getProductKey(item) !== currentKey)
+          .filter((item) => item.category === product.category)
+          .slice(0, 4);
+
+        setRelatedProducts(related);
+      } catch (err) {
+        console.log("related product fetch error", err);
+        setRelatedProducts([]);
+      }
+    };
+
+    loadRelatedProducts();
+  }, [product]);
+
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <Navbar />
+        <div className={styles.container}>
+          <button className="btn btn-ghost" onClick={() => navigate("home")}>← Back to Shop</button>
+          <div style={{ padding: "48px 0" }}>Loading product...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className={styles.page}>
+        <Navbar />
+        <div className={styles.container}>
+          <button className="btn btn-ghost" onClick={() => navigate("home")}>← Back to Shop</button>
+          <div style={{ padding: "48px 0" }}>
+            <h2 style={{ marginBottom: 8 }}>Product unavailable</h2>
+            <p style={{ marginBottom: 16 }}>{error || "We couldn't load this product."}</p>
+            <button className="btn btn-primary" onClick={() => navigate("home")}>Continue Shopping</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const productKey = getProductKey(product);
   const inCart  = cart.find((i) => i.id === productKey);
+  const wished = isWishlisted(product);
   const orig    = Math.round(product.price * 1.25);
   const disc    = Math.round((1 - product.price / orig) * 100);
 
@@ -99,6 +200,16 @@ export default function ProductDetails() {
               <button className="btn btn-primary" style={{ flex: 1, padding: 14 }} disabled={product.stock === 0} onClick={handleAdd}>
                 {inCart ? `In Cart (${inCart.qty}) · Add More` : "Add to Cart 🛒"}
               </button>
+              <button
+                className="btn btn-outline"
+                style={{ padding: 14 }}
+                onClick={() => {
+                  toggleWishlist(product);
+                  toast(wished ? "Removed from wishlist" : "Saved to wishlist", "success");
+                }}
+              >
+                {wished ? "♥ Saved" : "♡ Save"}
+              </button>
               <button className="btn btn-dark" style={{ flex: 1, padding: 14 }} disabled={product.stock === 0}
                 onClick={() => { handleAdd(); navigate("cart"); }}>
                 Buy Now →
@@ -110,6 +221,26 @@ export default function ProductDetails() {
             </div>
           </div>
         </div>
+
+        {relatedProducts.length > 0 && (
+          <section className={styles.relatedSection}>
+            <div className={styles.relatedHeader}>
+              <div>
+                <p className={styles.relatedEyebrow}>You May Also Like</p>
+                <h2 className={styles.relatedTitle}>Related Products</h2>
+              </div>
+              <button className="btn btn-outline btn-sm" onClick={() => navigate("home")}>
+                Browse More
+              </button>
+            </div>
+
+            <div className={styles.relatedGrid}>
+              {relatedProducts.map((item) => (
+                <ProductCard key={getProductKey(item)} product={item} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -17,14 +17,22 @@ export default function Checkout() {
   const { cart, total, clearCart } = useCart();
   const { user }                   = useAuth();
   const { navigate, toast }        = useApp();
+  const savedAddresses = user?.addresses || [];
+  const defaultAddress = savedAddresses.find((address) => address.isDefault) || savedAddresses[0] || null;
 
   const [step, setStep]       = useState(1);
   const [err, setErr]         = useState("");
   const [loading, setLoading] = useState(false);
   const [payment, setPayment] = useState("cod");
+  const [selectedAddressId, setSelectedAddressId] = useState(defaultAddress?.id || "");
   const [shipping, setShipping] = useState({
-    name: user?.name || "", email: user?.email || "",
-    phone: "", address: "", city: "", state: "", pincode: "",
+    name: defaultAddress?.fullName || user?.name || "",
+    email: user?.email || "",
+    phone: defaultAddress?.phone || user?.phone || "",
+    address: defaultAddress?.address || "",
+    city: defaultAddress?.city || "",
+    state: defaultAddress?.state || "",
+    pincode: defaultAddress?.pincode || "",
   });
 
   const shippingFee = total >= 999 ? 0 : 99;
@@ -42,6 +50,24 @@ export default function Checkout() {
   };
 
   const API = "https://smartcart-api-2ogq.onrender.com";
+
+  useEffect(() => {
+    if (!selectedAddressId) return;
+
+    const selected = savedAddresses.find((address) => address.id === selectedAddressId);
+    if (!selected) return;
+
+    setShipping((prev) => ({
+      ...prev,
+      name: selected.fullName,
+      email: user?.email || prev.email,
+      phone: selected.phone,
+      address: selected.address,
+      city: selected.city,
+      state: selected.state,
+      pincode: selected.pincode,
+    }));
+  }, [selectedAddressId, savedAddresses, user]);
 
 const placeOrder = async () => {
   try {
@@ -138,6 +164,38 @@ const placeOrder = async () => {
             {step === 1 && (
               <div style={{ animation: "fadeUp 0.3s ease" }}>
                 <h2 className={styles.stepTitle}>Shipping Details</h2>
+                {savedAddresses.length > 0 && (
+                  <div className={styles.savedAddressBlock}>
+                    <div className={styles.savedAddressHeader}>
+                      <div>
+                        <p className={styles.savedAddressTitle}>Choose a saved address</p>
+                        <p className={styles.savedAddressSub}>Select one to autofill the form below.</p>
+                      </div>
+                      <button className="btn btn-ghost btn-sm" onClick={() => navigate("profile")}>
+                        Manage Addresses
+                      </button>
+                    </div>
+                    <div className={styles.savedAddressList}>
+                      {savedAddresses.map((address) => (
+                        <button
+                          key={address.id}
+                          className={`${styles.savedAddressCard} ${selectedAddressId === address.id ? styles.savedAddressSelected : ""}`}
+                          onClick={() => {
+                            setSelectedAddressId(address.id);
+                            setErr("");
+                          }}
+                        >
+                          <div className={styles.savedAddressTop}>
+                            <strong>{address.label}</strong>
+                            {address.isDefault && <span className="badge badge-success">Default</span>}
+                          </div>
+                          <p>{address.fullName} · {address.phone}</p>
+                          <p>{address.address}, {address.city}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className={styles.fieldGrid}>
                   {SHIPPING_FIELDS.map(([k, l, ph, t]) => (
                     <div
@@ -150,7 +208,11 @@ const placeOrder = async () => {
                         type={t}
                         placeholder={ph}
                         value={shipping[k]}
-                        onChange={(e) => { setShipping({ ...shipping, [k]: e.target.value }); setErr(""); }}
+                        onChange={(e) => {
+                          setSelectedAddressId("");
+                          setShipping({ ...shipping, [k]: e.target.value });
+                          setErr("");
+                        }}
                       />
                     </div>
                   ))}

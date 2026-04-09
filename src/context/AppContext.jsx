@@ -11,6 +11,17 @@ export const AppContext = createContext();
 
 export function AppProvider({ children }) {
   const { user } = useAuth();
+  const isProtectedPage = (target) =>
+    [
+      "home",
+      "cart",
+      "checkout",
+      "success",
+      "orders",
+      "wishlist",
+      "profile",
+      "product",
+    ].some((page) => target === page || target.startsWith(`${page}/`));
 
   const getInitialPage = () => {
     const hashPage = window.location.hash.replace("#", "");
@@ -27,21 +38,11 @@ export function AppProvider({ children }) {
 
   const navigate = useCallback(
     (target) => {
-      const protectedPages = [
-        "home",
-        "cart",
-        "checkout",
-        "success",
-        "orders",
-        "profile",
-        "product",
-      ];
-
-      if (protectedPages.includes(target) && !user) {
+      if (isProtectedPage(target) && !user) {
         target = "login";
       }
 
-      if (target === "admin" && user?.role !== "admin") {
+      if ((target === "admin" || target.startsWith("admin/")) && user?.role !== "admin") {
         target = "home";
       }
 

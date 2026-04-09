@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 import { useApp } from "../../context/AppContext";
 import { fmt } from "../../utils/helpers";
 import styles from "./Navbar.module.css";
@@ -8,6 +9,7 @@ import styles from "./Navbar.module.css";
 export default function Navbar({ showSearch = false }) {
   const { user, logout } = useAuth();
   const { totalItems, total } = useCart();
+  const { wishlistCount } = useWishlist();
   const { navigate, page } = useApp();
   const [search, setSearch] = useState("");
   const [drop, setDrop] = useState(false);
@@ -19,6 +21,7 @@ export default function Navbar({ showSearch = false }) {
 
   const menuItems = [
     { label: "🏠 Shop",        target: "home"    },
+    { label: "♡ Wishlist",    target: "wishlist" },
     { label: "🛒 Cart",        target: "cart"    },
     { label: "📦 My Orders",   target: "orders"  },
     { label: "👤 Profile",     target: "profile" },
@@ -54,15 +57,27 @@ export default function Navbar({ showSearch = false }) {
         )}
 
         <div className={styles.actions}>
-          {/* Cart button */}
-          <button className={`btn btn-outline btn-sm ${styles.cartBtn}`} onClick={() => navigate("cart")}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <path d="M16 10a4 4 0 0 1-8 0"/>
-            </svg>
-            Cart
-            {totalItems > 0 && <span className={styles.badge}>{totalItems}</span>}
+          <button
+            className={styles.iconAction}
+            onClick={() => navigate("wishlist")}
+            aria-label="Open wishlist"
+          >
+            <span className={styles.iconGlyph}>{wishlistCount > 0 ? "♥" : "♡"}</span>
+            {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
+          </button>
+
+          <button className={styles.cartAction} onClick={() => navigate("cart")}>
+            <span className={styles.cartTopRow}>
+              <span className={styles.cartIconWrap}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+              </span>
+              <span className={styles.cartLabel}>Cart</span>
+              {totalItems > 0 && <span className={styles.badge}>{totalItems}</span>}
+            </span>
             {total > 0 && <span className={styles.cartPrice}>{fmt(total)}</span>}
           </button>
 

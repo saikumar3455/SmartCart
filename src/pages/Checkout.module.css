@@ -84,6 +84,70 @@
   gap: 14px;
 }
 
+.savedAddressBlock {
+  margin-bottom: 18px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+
+.savedAddressHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.savedAddressTitle {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.savedAddressSub {
+  color: var(--text2);
+  font-size: 0.82rem;
+}
+
+.savedAddressList {
+  display: grid;
+  gap: 10px;
+}
+
+.savedAddressCard {
+  text-align: left;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px;
+  cursor: pointer;
+  transition: var(--t);
+}
+
+.savedAddressCard:hover {
+  border-color: var(--border2);
+}
+
+.savedAddressSelected {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(30, 136, 255, 0.12);
+}
+
+.savedAddressTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.savedAddressCard p {
+  color: var(--text2);
+  font-size: 0.84rem;
+  margin-top: 3px;
+}
+
 /* Payment */
 .paymentOptions {
   display: flex;
@@ -209,4 +273,5 @@
   .content     { grid-template-columns: 1fr; }
   .miniSummary { position: static; }
   .fieldGrid   { grid-template-columns: 1fr; }
+  .savedAddressHeader { flex-direction: column; }
 }

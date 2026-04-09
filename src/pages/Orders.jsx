@@ -139,6 +139,13 @@ export default function Orders() {
                     🛒 {order.items?.length} item
                     {order.items?.length !== 1 ? "s" : ""}
                   </p>
+
+                  <button
+                    className={`btn btn-outline btn-sm ${styles.detailBtn}`}
+                    onClick={() => navigate(`orders/${order._id}`)}
+                  >
+                    View Details →
+                  </button>
                 </div>
               </div>
             ))}

@@ -24,71 +24,14 @@ export default function Homepage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // DB products
         const dbRes = await fetch(
           "https://smartcart-api-2ogq.onrender.com/api/products"
         );
         const dbProducts = await dbRes.json();
-
-        // External dummy products
-        const apiRes = await fetch(
-          "https://dummyjson.com/products?limit=100"
-        );
-        const apiData = await apiRes.json();
-
-        const mapped = apiData.products.map((p) => {
-          let mappedCategory = "accessories";
-          const cat = (p.category || "").toLowerCase();
-
-          if (
-            cat.includes("mens") ||
-            cat.includes("shirts") ||
-            cat.includes("shoes") ||
-            cat.includes("tops")
-          ) {
-            mappedCategory = "mens";
-          } else if (
-            cat.includes("womens") ||
-            cat.includes("dress") ||
-            cat.includes("beauty") ||
-            cat.includes("skincare")
-          ) {
-            mappedCategory = "womens";
-          } else if (
-            cat.includes("kids") ||
-            cat.includes("baby")
-          ) {
-            mappedCategory = "kids";
-          }
-
-          return {
-            id: p.id,
-            name: p.title,
-            price: Math.round(p.price * 83),
-            category: mappedCategory,
-            image: p.thumbnail,
-            description: p.description,
-            rating: Number(p.rating) || 4,
-            reviews: Array.isArray(p.reviews)
-              ? p.reviews.length
-              : Number(p.reviews) || 0,
-            stock: p.stock || 10,
-          };
-        });
-
-        // merge DB + dummy without duplicates
-        const merged = [...dbProducts];
-
-        mapped.forEach((item) => {
-          const exists = merged.some(
-            (db) => db.name?.toLowerCase() === item.name.toLowerCase()
-          );
-          if (!exists) merged.push(item);
-        });
-
-        setProducts(merged);
+        setProducts(Array.isArray(dbProducts) ? dbProducts : []);
       } catch (err) {
         console.log("product fetch error", err);
+        setProducts([]);
       }
     };
 

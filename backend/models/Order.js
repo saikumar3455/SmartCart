@@ -10,12 +10,21 @@ const orderSchema = new mongoose.Schema(
     },
       userName: String,
     userEmail: String,
+    shipping: {
+      name: String,
+      email: String,
+      phone: String,
+      address: String,
+      city: String,
+      state: String,
+      pincode: String,
+    },
+    paymentMethod: String,
     
     items: [
       {
         productId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
+          type: String,
         },
         name: String,
         price: Number,
@@ -23,6 +32,9 @@ const orderSchema = new mongoose.Schema(
         image: String,
       },
     ],
+    subtotal: Number,
+    shippingFee: Number,
+    tax: Number,
     total: {
       type: Number,
       required: true,

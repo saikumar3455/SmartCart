@@ -1,22 +1,35 @@
 import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 import { useApp } from "../../context/AppContext";
 import { fmt, getProductKey, stars } from "../../utils/helpers";
 import styles from "./ProductCard.module.css";
 
 export default function ProductCard({ product }) {
   const { addToCart, cart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const { navigate, setSelectedProduct } = useApp();
   const productKey = getProductKey(product);
   const inCart = cart.find((i) => i.id === productKey);
+  const wished = isWishlisted(product);
 
   const handleView = () => {
     setSelectedProduct(product);
-    navigate("product");
+    navigate(`product/${productKey}`);
   };
 
   return (
     <div className={styles.card}>
       <div className={styles.imageWrap} onClick={handleView}>
+        <button
+          className={`${styles.wishBtn} ${wished ? styles.wishActive : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWishlist(product);
+          }}
+          aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          {wished ? "♥" : "♡"}
+        </button>
         <img
           src={product.image}
           alt={product.name}

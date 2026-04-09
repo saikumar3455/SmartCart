@@ -2,25 +2,133 @@ import { useState } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
-import { getOrders, getUsers, setUsers, fmt } from "../utils/helpers";
+import { useWishlist } from "../context/WishlistContext";
+import { getOrders, getUsers, setUsers, fmt, uid } from "../utils/helpers";
 import styles from "./Profile.module.css";
+
+const EMPTY_ADDRESS = {
+  id: "",
+  label: "",
+  fullName: "",
+  phone: "",
+  address: "",
+  city: "",
+  state: "",
+  pincode: "",
+  isDefault: false,
+};
 
 export default function Profile() {
   const { user, login } = useAuth();
+  const { wishlistCount } = useWishlist();
   const { navigate, toast } = useApp();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: user?.name || "", phone: user?.phone || "" });
+  const [addressForm, setAddressForm] = useState({
+    ...EMPTY_ADDRESS,
+    fullName: user?.name || "",
+    phone: user?.phone || "",
+  });
+  const [editingAddressId, setEditingAddressId] = useState("");
 
   const orders = getOrders().filter((o) => o.userId === user?.id || o.userEmail === user?.email);
   const totalSpent = orders.reduce((a, o) => a + o.total, 0);
+  const addresses = user?.addresses || [];
+
+  const persistUser = (updatedUser) => {
+    const users = getUsers();
+    const updatedUsers = users.map((u) => {
+      const sameUser =
+        (u._id && updatedUser._id && u._id === updatedUser._id) ||
+        (u.id && updatedUser.id && u.id === updatedUser.id) ||
+        u.email === updatedUser.email;
+
+      return sameUser ? { ...u, ...updatedUser } : u;
+    });
+
+    setUsers(updatedUsers);
+    login(updatedUser);
+  };
 
   const save = () => {
-    const users = getUsers();
-    const updated = users.map((u) => (u.id === user.id ? { ...u, ...form } : u));
-    setUsers(updated);
-    login({ ...user, ...form });
+    const updatedUser = { ...user, ...form };
+    persistUser(updatedUser);
     setEditing(false);
     toast("Profile updated ✓", "success");
+  };
+
+  const resetAddressForm = () => {
+    setAddressForm({
+      ...EMPTY_ADDRESS,
+      fullName: user?.name || "",
+      phone: user?.phone || "",
+    });
+    setEditingAddressId("");
+  };
+
+  const saveAddress = () => {
+    const req = ["label", "fullName", "phone", "address", "city", "state", "pincode"];
+
+    if (req.some((key) => !String(addressForm[key] || "").trim())) {
+      toast("Fill all address fields", "error");
+      return;
+    }
+
+    if (!/^\d{10}$/.test(addressForm.phone)) {
+      toast("Enter a valid 10-digit phone number", "error");
+      return;
+    }
+
+    if (!/^\d{6}$/.test(addressForm.pincode)) {
+      toast("Enter a valid 6-digit PIN code", "error");
+      return;
+    }
+
+    const nextAddress = {
+      ...addressForm,
+      id: editingAddressId || uid(),
+    };
+
+    const nextAddressesBase = editingAddressId
+      ? addresses.map((item) => (item.id === editingAddressId ? nextAddress : item))
+      : [...addresses, nextAddress];
+
+    const nextAddresses = nextAddressesBase.map((item, index) => ({
+      ...item,
+      isDefault: nextAddress.isDefault ? item.id === nextAddress.id : item.isDefault || index === 0,
+    }));
+
+    const updatedUser = { ...user, addresses: nextAddresses };
+    persistUser(updatedUser);
+    resetAddressForm();
+    toast(editingAddressId ? "Address updated ✓" : "Address saved ✓", "success");
+  };
+
+  const editAddress = (address) => {
+    setEditingAddressId(address.id);
+    setAddressForm(address);
+  };
+
+  const removeAddress = (id) => {
+    const nextAddresses = addresses.filter((item) => item.id !== id);
+    const normalized = nextAddresses.map((item, index) => ({
+      ...item,
+      isDefault: nextAddresses.length > 0 ? item.isDefault || index === 0 : false,
+    }));
+
+    persistUser({ ...user, addresses: normalized });
+    if (editingAddressId === id) resetAddressForm();
+    toast("Address removed", "success");
+  };
+
+  const makeDefault = (id) => {
+    const nextAddresses = addresses.map((item) => ({
+      ...item,
+      isDefault: item.id === id,
+    }));
+
+    persistUser({ ...user, addresses: nextAddresses });
+    toast("Default address updated ✓", "success");
   };
 
   return (
@@ -72,7 +180,7 @@ export default function Profile() {
           {[
             ["📦", "Total Orders", orders.length],
             ["💰", "Total Spent",  fmt(totalSpent)],
-            ["⭐", "Member Since", user?.joined || "2025"],
+            ["♡", "Wishlist Items", wishlistCount],
           ].map(([icon, label, val]) => (
             <div key={label} className={styles.statCard}>
               <div className={styles.statIcon}>{icon}</div>
@@ -82,6 +190,130 @@ export default function Profile() {
           ))}
         </div>
 
+        <div className={styles.addressSection}>
+          <div className={styles.addressHeader}>
+            <div>
+              <h2 className={styles.sectionTitle}>Saved Addresses</h2>
+              <p className={styles.sectionSub}>Use a default address to speed up checkout.</p>
+            </div>
+            <span className="badge badge-dim">{addresses.length} saved</span>
+          </div>
+
+          <div className={styles.addressForm}>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Label</label>
+              <input
+                value={addressForm.label}
+                onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })}
+                placeholder="Home, Office, Hostel"
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Full Name</label>
+              <input
+                value={addressForm.fullName}
+                onChange={(e) => setAddressForm({ ...addressForm, fullName: e.target.value })}
+                placeholder="John Doe"
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Phone</label>
+              <input
+                value={addressForm.phone}
+                onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
+                placeholder="10-digit number"
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>PIN Code</label>
+              <input
+                value={addressForm.pincode}
+                onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                placeholder="400001"
+              />
+            </div>
+            <div className="field" style={{ margin: 0, gridColumn: "1 / -1" }}>
+              <label>Address</label>
+              <input
+                value={addressForm.address}
+                onChange={(e) => setAddressForm({ ...addressForm, address: e.target.value })}
+                placeholder="Flat, Street, Area"
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>City</label>
+              <input
+                value={addressForm.city}
+                onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                placeholder="Mumbai"
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>State</label>
+              <input
+                value={addressForm.state}
+                onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
+                placeholder="Maharashtra"
+              />
+            </div>
+            <label className={styles.defaultCheck}>
+              <input
+                type="checkbox"
+                checked={addressForm.isDefault}
+                onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
+              />
+              Set as default address
+            </label>
+            <div className={styles.addressActions}>
+              <button className="btn btn-primary" onClick={saveAddress}>
+                {editingAddressId ? "Update Address" : "Save Address"}
+              </button>
+              {editingAddressId && (
+                <button className="btn btn-outline" onClick={resetAddressForm}>
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
+
+          {addresses.length > 0 ? (
+            <div className={styles.addressList}>
+              {addresses.map((address) => (
+                <div key={address.id} className={styles.addressCard}>
+                  <div className={styles.addressCardTop}>
+                    <div className={styles.addressMeta}>
+                      <h3>{address.label}</h3>
+                      {address.isDefault && <span className="badge badge-success">Default</span>}
+                    </div>
+                    <div className={styles.addressButtons}>
+                      {!address.isDefault && (
+                        <button className="btn btn-ghost btn-sm" onClick={() => makeDefault(address.id)}>
+                          Make Default
+                        </button>
+                      )}
+                      <button className="btn btn-ghost btn-sm" onClick={() => editAddress(address)}>
+                        Edit
+                      </button>
+                      <button className="btn btn-ghost btn-sm" onClick={() => removeAddress(address.id)}>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                  <p className={styles.addressText}>{address.fullName} · {address.phone}</p>
+                  <p className={styles.addressText}>
+                    {address.address}, {address.city}, {address.state} - {address.pincode}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.addressEmpty}>No saved addresses yet. Add one for faster checkout.</div>
+          )}
+        </div>
+
+        <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => navigate("wishlist")}>
+          Open Wishlist →
+        </button>
         <button className="btn btn-outline" style={{ width: "100%" }} onClick={() => navigate("orders")}>
           View All Orders →
         </button>

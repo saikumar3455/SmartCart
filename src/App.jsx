@@ -4,6 +4,7 @@ import "./App.css";
 
 import { AuthProvider }    from "./context/AuthContext";
 import { CartProvider }    from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 import { AppProvider, useApp } from "./context/AppContext";
 
 import Toast           from "./components/Toast";
@@ -14,10 +15,12 @@ import Homepage        from "./pages/Homepage";
 import ProductDetails  from "./pages/ProductDetail";
 import CartPage        from "./pages/CartPage";
 import Checkout        from "./pages/Checkout";
+import OrderDetail     from "./pages/OrderDetail";
 import Success         from "./pages/Success";
 import Orders          from "./pages/Orders";
 import Profile         from "./pages/Profile";
 import Admin           from "./pages/Admin";
+import Wishlist        from "./pages/Wishlist";
 
 // Seed localStorage with default products + admin user on first load
 
@@ -36,9 +39,28 @@ function Router() {
     checkout:<Checkout />,
     success: <Success />,
     orders:  <Orders />,
+    wishlist: <Wishlist />,
     profile: <Profile />,
     admin:   <Admin />,
   };
+
+  if (page.startsWith("product/")) {
+    return (
+      <>
+        <ProductDetails />
+        <Toast />
+      </>
+    );
+  }
+
+  if (page.startsWith("orders/")) {
+    return (
+      <>
+        <OrderDetail />
+        <Toast />
+      </>
+    );
+  }
 
   return (
     <>
@@ -53,11 +75,13 @@ export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <AppProvider>
-          <ErrorBoundary>
-            <Router />
-          </ErrorBoundary>
-        </AppProvider>
+        <WishlistProvider>
+          <AppProvider>
+            <ErrorBoundary>
+              <Router />
+            </ErrorBoundary>
+          </AppProvider>
+        </WishlistProvider>
       </CartProvider>
     </AuthProvider>
   );
