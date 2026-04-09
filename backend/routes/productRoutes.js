@@ -3,6 +3,9 @@ import Product from "../models/Product.js";
 
 const router = express.Router();
 
+const FOOD_PATTERN =
+  /grocer|grocery|food|drink|beverage|snack|meal|coffee|tea|juice|soda|cola|chips|chocolate|cookie|biscuit|rice|oil|masala|spice|sauce|noodle|pasta|bread|milk|cheese|butter|fruit|vegetable|honey/i;
+
 const mapDummyProduct = (p) => {
   let mappedCategory = "accessories";
   const cat = (p.category || "").toLowerCase();
@@ -221,6 +224,45 @@ router.delete("/cleanup-cars", async (req, res) => {
     res.json({
       message: `${result.deletedCount} vehicle products removed`,
       count: result.deletedCount,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.put("/recategorize-food", async (req, res) => {
+  try {
+    const result = await Product.updateMany(
+      {
+        $or: [
+          { category: { $in: ["accessories", "beauty", "groceries"] } },
+          { name: FOOD_PATTERN },
+          { description: FOOD_PATTERN },
+        ],
+      },
+      [
+        {
+          $set: {
+            category: {
+              $cond: [
+                {
+                  $or: [
+                    { $regexMatch: { input: { $toLower: { $ifNull: ["$name", ""] } }, regex: "grocer|grocery|food|drink|beverage|snack|meal|coffee|tea|juice|soda|cola|chips|chocolate|cookie|biscuit|rice|oil|masala|spice|sauce|noodle|pasta|bread|milk|cheese|butter|fruit|vegetable|honey" } },
+                    { $regexMatch: { input: { $toLower: { $ifNull: ["$description", ""] } }, regex: "grocer|grocery|food|drink|beverage|snack|meal|coffee|tea|juice|soda|cola|chips|chocolate|cookie|biscuit|rice|oil|masala|spice|sauce|noodle|pasta|bread|milk|cheese|butter|fruit|vegetable|honey" } },
+                  ],
+                },
+                "food",
+                "$category",
+              ],
+            },
+          },
+        },
+      ]
+    );
+
+    res.json({
+      message: `${result.modifiedCount} products moved to food`,
+      count: result.modifiedCount,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

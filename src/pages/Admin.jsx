@@ -36,6 +36,7 @@ export default function Admin() {
   const [err, setErr] = useState("");
   const [importingDummy, setImportingDummy] = useState(false);
   const [cleaningCars, setCleaningCars] = useState(false);
+  const [movingFood, setMovingFood] = useState(false);
 
   const loadProducts = async () => {
     const res = await fetch(`${API}/api/products`);
@@ -232,6 +233,29 @@ const saveEdit = async () => {
     }
   };
 
+  const recategorizeFood = async () => {
+    try {
+      setMovingFood(true);
+      const res = await fetch(`${API}/api/products/recategorize-food`, {
+        method: "PUT",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Food recategorization failed");
+      }
+
+      await loadProducts();
+      toast(data.message || "Food products moved successfully", "success");
+    } catch (error) {
+      console.log(error);
+      toast(error.message || "Failed to move food products", "error");
+    } finally {
+      setMovingFood(false);
+    }
+  };
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -420,6 +444,13 @@ const saveEdit = async () => {
     disabled={cleaningCars}
   >
     {cleaningCars ? "Removing Vehicle Products..." : "Remove Vehicle Products"}
+  </button>
+  <button
+    className="btn btn-outline"
+    onClick={recategorizeFood}
+    disabled={movingFood}
+  >
+    {movingFood ? "Moving Food Products..." : "Move Food To Food Category"}
   </button>
 </div>
 {editProd && (
