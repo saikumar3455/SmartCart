@@ -19,6 +19,7 @@ export default function ProductDetails() {
   const { user } = useAuth();
   const [qty, setQty] = useState(1);
   const [product, setProduct] = useState(selectedProduct);
+  const [selectedImage, setSelectedImage] = useState("");
   const [loading, setLoading] = useState(!selectedProduct);
   const [error, setError] = useState("");
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -63,6 +64,14 @@ export default function ProductDetails() {
 
   useEffect(() => {
     if (!product) return;
+
+    const gallery = Array.isArray(product.images) && product.images.length > 0
+      ? product.images
+      : product.image
+        ? [product.image]
+        : [];
+
+    setSelectedImage(gallery[0] || "");
 
     const userKey = user?.email || "guest";
     const currentKey = getProductKey(product);
@@ -134,6 +143,11 @@ export default function ProductDetails() {
   const orig    = Math.round(product.price * 1.25);
   const disc    = Math.round((1 - product.price / orig) * 100);
   const urgency = getUrgencyMeta(product);
+  const galleryImages = Array.isArray(product.images) && product.images.length > 0
+    ? product.images
+    : product.image
+      ? [product.image]
+      : [];
 
   const handleAdd = () => {
     for (let i = 0; i < qty; i++) addToCart(product);
@@ -166,11 +180,28 @@ export default function ProductDetails() {
               {disc}% OFF
             </div>
             <img
-              src={product.image}
+              src={selectedImage || product.image}
               alt={product.name}
               className={styles.image}
               onError={(e) => { e.target.src = `https://placehold.co/600x600/1e1e1e/666?text=${encodeURIComponent(product.name)}`; }}
             />
+            {galleryImages.length > 1 && (
+              <div className={styles.galleryStrip}>
+                {galleryImages.map((image, index) => (
+                  <button
+                    key={`${image}-${index}`}
+                    className={`${styles.galleryThumb} ${selectedImage === image ? styles.galleryThumbActive : ""}`}
+                    onClick={() => setSelectedImage(image)}
+                  >
+                    <img
+                      src={image}
+                      alt={`${product.name} ${index + 1}`}
+                      className={styles.galleryThumbImage}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Info */}

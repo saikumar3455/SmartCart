@@ -37,6 +37,14 @@
   font-weight: 800;
 }
 
+.emptyInline {
+  background: var(--surface);
+  border: 1px dashed var(--border2);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  color: var(--text2);
+}
+
 .items {
   display: flex;
   flex-direction: column;
@@ -138,6 +146,25 @@
   margin-top: 2px;
 }
 
+.savedSection {
+  margin-top: 28px;
+}
+
+.savedHeader {
+  margin-bottom: 16px;
+}
+
+.savedTitle {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.savedMeta {
+  font-size: 0.78rem;
+  color: var(--text3);
+}
+
 /* Summary */
 .summary {
   background: var(--surface);
@@ -157,6 +184,55 @@
 
 .summaryRows { display: flex; flex-direction: column; gap: 12px; }
 
+.couponBox {
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+
+.couponHeader {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.couponTitle {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.couponSub {
+  font-size: 0.75rem;
+  color: var(--text3);
+}
+
+.couponRow {
+  display: flex;
+  gap: 8px;
+}
+
+.couponInput {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  color: var(--text);
+}
+
+.couponApplied {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: #4ade80;
+  font-weight: 700;
+}
+
 .summaryRow {
   display: flex;
   justify-content: space-between;
@@ -168,6 +244,11 @@
   font-size: 0.75rem;
   color: var(--text3);
   margin-top: 8px;
+}
+
+.discountVal {
+  color: #4ade80;
+  font-weight: 700;
 }
 
 .grandTotal {
@@ -182,4 +263,6 @@
 @media (max-width: 768px) {
   .container { grid-template-columns: 1fr; }
   .summary   { position: static; }
+  .couponHeader,
+  .couponRow { flex-direction: column; }
 }

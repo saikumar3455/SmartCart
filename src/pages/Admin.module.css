@@ -200,6 +200,27 @@
   font-size: 1rem;
 }
 
+.couponCard {
+  margin-top: 28px;
+}
+
+.couponHeaderRow {
+  margin-bottom: 14px;
+}
+
+.couponSubtext,
+.couponMeta {
+  color: var(--text3);
+  font-size: 0.82rem;
+}
+
+.couponRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
 .productRow {
   display: flex;
   gap: 12px;
@@ -358,6 +379,10 @@
   .editorGrid,
   .productFormCard {
     grid-template-columns: 1fr;
+  }
+  .couponRow {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .fullWidth,
   .editorPreviewWrap,

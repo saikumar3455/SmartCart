@@ -16,10 +16,20 @@ const EMPTY_PRODUCT = {
   price: "",
   category: "mens",
   image: "",
+  imagesText: "",
   description: "",
   stock: "10",
   rating: 4.5,
   reviews: 0,
+};
+
+const EMPTY_COUPON = {
+  code: "",
+  label: "",
+  type: "percent",
+  value: "10",
+  minSubtotal: "999",
+  isActive: true,
 };
 
 export default function Admin() {
@@ -31,8 +41,10 @@ export default function Admin() {
  const [products, setProds] = useState([]);
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [coupons, setCoupons] = useState([]);
   const [newProd, setNewProd] = useState(EMPTY_PRODUCT);
   const [editProd, setEditProd] = useState(null);
+  const [newCoupon, setNewCoupon] = useState(EMPTY_COUPON);
   const [err, setErr] = useState("");
   const [importingDummy, setImportingDummy] = useState(false);
   const [cleaningCars, setCleaningCars] = useState(false);
@@ -48,6 +60,12 @@ export default function Admin() {
     setProds(safeProducts);
   };
 
+  const loadCoupons = async () => {
+    const res = await fetch(`${API}/api/coupons`);
+    const data = await res.json();
+    setCoupons(Array.isArray(data) ? data : []);
+  };
+
   useEffect(() => {
     fetch(`${API}/api/users`)
       .then((res) => res.json())
@@ -58,6 +76,9 @@ export default function Admin() {
   useEffect(() => {
   loadProducts().catch((err) => console.log("product fetch error", err));
 }, []);
+  useEffect(() => {
+    loadCoupons().catch((err) => console.log("coupon fetch error", err));
+  }, []);
   useEffect(() => {
     fetch(`${API}/api/orders`)
       .then((res) => res.json())
@@ -89,6 +110,10 @@ export default function Admin() {
           ...newProd,
           price: Number(newProd.price),
           stock: Number(newProd.stock),
+          images: newProd.imagesText
+            .split("\n")
+            .map((item) => item.trim())
+            .filter(Boolean),
         }),
       }
     );
@@ -132,7 +157,13 @@ const saveEdit = async () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(editProd),
+        body: JSON.stringify({
+          ...editProd,
+          images: (editProd.imagesText || "")
+            .split("\n")
+            .map((item) => item.trim())
+            .filter(Boolean),
+        }),
       }
     );
 
@@ -151,6 +182,61 @@ const saveEdit = async () => {
     toast("Update failed", "error");
   }
 };
+
+  const addCoupon = async () => {
+    try {
+      const res = await fetch(`${API}/api/coupons`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newCoupon,
+          code: newCoupon.code.toUpperCase(),
+          value: Number(newCoupon.value),
+          minSubtotal: Number(newCoupon.minSubtotal),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Coupon create failed");
+
+      setNewCoupon(EMPTY_COUPON);
+      await loadCoupons();
+      toast("Coupon created ✓", "success");
+    } catch (error) {
+      console.log(error);
+      toast(error.message || "Failed to create coupon", "error");
+    }
+  };
+
+  const toggleCoupon = async (coupon) => {
+    try {
+      const res = await fetch(`${API}/api/coupons/${coupon._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !coupon.isActive }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Coupon update failed");
+
+      setCoupons((prev) => prev.map((item) => (item._id === data._id ? data : item)));
+      toast(`Coupon ${data.isActive ? "activated" : "paused"} ✓`, "success");
+    } catch (error) {
+      console.log(error);
+      toast(error.message || "Failed to update coupon", "error");
+    }
+  };
+
+  const deleteCoupon = async (id) => {
+    try {
+      await fetch(`${API}/api/coupons/${id}`, { method: "DELETE" });
+      setCoupons((prev) => prev.filter((item) => item._id !== id));
+      toast("Coupon deleted ✓", "success");
+    } catch (error) {
+      console.log(error);
+      toast("Failed to delete coupon", "error");
+    }
+  };
 
   const deleteUser = (id) => {
     if (!window.confirm("Delete this user? This cannot be undone.")) return;
@@ -491,6 +577,16 @@ const saveEdit = async () => {
       />
 
       <textarea
+        placeholder="Gallery image URLs (one per line)"
+        value={editProd.imagesText || ""}
+        onChange={(e) =>
+          setEditProd({ ...editProd, imagesText: e.target.value })
+        }
+        rows={3}
+        className={`${styles.editorTextarea} ${styles.fullWidth}`}
+      />
+
+      <textarea
         placeholder="Description"
         value={editProd.description}
         onChange={(e) =>
@@ -568,6 +664,14 @@ const saveEdit = async () => {
   />
 
   <textarea
+    placeholder="Gallery image URLs (one per line)"
+    value={newProd.imagesText}
+    onChange={(e) => setNewProd({ ...newProd, imagesText: e.target.value })}
+    rows={3}
+    className={`${styles.productTextarea} ${styles.fullWidth}`}
+  />
+
+  <textarea
     placeholder="Description"
     value={newProd.description}
     onChange={(e) => setNewProd({ ...newProd, description: e.target.value })}
@@ -592,7 +696,7 @@ const saveEdit = async () => {
           <div key={p._id || p.id} className={styles.orderCard}>
             <div className={styles.productRow}>
               <img
-                src={p.image}
+                src={p.image || p.images?.[0]}
                 alt={p.name}
                 width="60"
                 height="60"
@@ -608,7 +712,12 @@ const saveEdit = async () => {
                 <div className={styles.productActions}>
     <button
       className="btn btn-outline btn-sm"
-      onClick={() => setEditProd(p)}
+      onClick={() =>
+        setEditProd({
+          ...p,
+          imagesText: Array.isArray(p.images) ? p.images.join("\n") : "",
+        })
+      }
     >
       ✏️ Edit
     </button>
@@ -629,6 +738,84 @@ const saveEdit = async () => {
         ))}
       </div>
     )}
+
+    <div className={styles.couponCard}>
+      <div className={styles.couponHeaderRow}>
+        <div>
+          <h2 className={styles.editorTitle}>🎟 Manage Coupons</h2>
+          <p className={styles.couponSubtext}>Create, pause, and remove offers used in cart and checkout.</p>
+        </div>
+      </div>
+
+      <div className={styles.productFormCard}>
+        <input
+          placeholder="Coupon Code"
+          value={newCoupon.code}
+          onChange={(e) => setNewCoupon({ ...newCoupon, code: e.target.value.toUpperCase() })}
+          className={styles.productInput}
+        />
+        <input
+          placeholder="Coupon Label"
+          value={newCoupon.label}
+          onChange={(e) => setNewCoupon({ ...newCoupon, label: e.target.value })}
+          className={styles.productInput}
+        />
+        <select
+          value={newCoupon.type}
+          onChange={(e) => setNewCoupon({ ...newCoupon, type: e.target.value })}
+          className={styles.productSelect}
+        >
+          <option value="percent">Percent</option>
+          <option value="flat">Flat</option>
+          <option value="shipping">Shipping</option>
+        </select>
+        <input
+          placeholder="Value"
+          type="number"
+          value={newCoupon.value}
+          onChange={(e) => setNewCoupon({ ...newCoupon, value: e.target.value })}
+          className={styles.productInput}
+        />
+        <input
+          placeholder="Minimum Subtotal"
+          type="number"
+          value={newCoupon.minSubtotal}
+          onChange={(e) => setNewCoupon({ ...newCoupon, minSubtotal: e.target.value })}
+          className={styles.productInput}
+        />
+        <button className={`btn btn-primary ${styles.productSubmit}`} onClick={addCoupon}>
+          ➕ Add Coupon
+        </button>
+      </div>
+
+      {coupons.length === 0 ? (
+        <p className={styles.emptyNote}>No coupons found.</p>
+      ) : (
+        <div className={styles.ordersList}>
+          {coupons.map((coupon) => (
+            <div key={coupon._id} className={styles.orderCard}>
+              <div className={styles.couponRow}>
+                <div>
+                  <h3 className={styles.productName}>{coupon.code}</h3>
+                  <p className={styles.productCategory}>{coupon.label}</p>
+                  <p className={styles.couponMeta}>
+                    {coupon.type} · value {coupon.value} · min {fmt(coupon.minSubtotal || 0)}
+                  </p>
+                </div>
+                <div className={styles.productActions}>
+                  <button className="btn btn-outline btn-sm" onClick={() => toggleCoupon(coupon)}>
+                    {coupon.isActive ? "Pause" : "Activate"}
+                  </button>
+                  <button className="btn btn-danger btn-sm" onClick={() => deleteCoupon(coupon._id)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   </div>
 )}
 

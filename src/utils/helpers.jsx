@@ -44,6 +44,59 @@ export const getNotifications = (u) => JSON.parse(localStorage.getItem(`sc_notif
 export const saveNotifications = (u, items) =>
   localStorage.setItem(`sc_notifications_${u}`, JSON.stringify(items));
 
+export const getSavedForLater = (u) => JSON.parse(localStorage.getItem(`sc_saved_${u}`) || "[]");
+export const saveSavedForLater = (u, items) =>
+  localStorage.setItem(`sc_saved_${u}`, JSON.stringify(items));
+
+export const getCouponState = (u) => JSON.parse(localStorage.getItem(`sc_coupon_${u}`) || "null");
+export const saveCouponState = (u, coupon) =>
+  localStorage.setItem(`sc_coupon_${u}`, JSON.stringify(coupon));
+
+export const COUPONS = {
+  WELCOME15: {
+    code: "WELCOME15",
+    label: "15% off for new shoppers",
+    type: "percent",
+    value: 15,
+    minSubtotal: 1499,
+  },
+  SAVE10: {
+    code: "SAVE10",
+    label: "10% off on fashion picks",
+    type: "percent",
+    value: 10,
+    minSubtotal: 999,
+  },
+  APP200: {
+    code: "APP200",
+    label: "Flat Rs.200 off above Rs.2499",
+    type: "flat",
+    value: 200,
+    minSubtotal: 2499,
+  },
+  FREESHIP: {
+    code: "FREESHIP",
+    label: "Free shipping on this order",
+    type: "shipping",
+    value: 99,
+    minSubtotal: 699,
+  },
+};
+
+export const getCouponDiscount = (coupon, subtotal, shipping = 0) => {
+  if (!coupon || subtotal < (coupon.minSubtotal || 0)) return 0;
+
+  if (coupon.type === "percent") {
+    return Math.round(subtotal * (coupon.value / 100));
+  }
+
+  if (coupon.type === "shipping") {
+    return Math.min(shipping, coupon.value || shipping);
+  }
+
+  return Math.min(subtotal, coupon.value || 0);
+};
+
 export const getUrgencyMeta = (product) => {
   const stock = Number(product?.stock || 0);
   const reviews = Number(product?.reviews || 0);

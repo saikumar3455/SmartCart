@@ -10,6 +10,19 @@ const LOCAL_DUMMY_PRODUCTS = require("../data/localDummyProducts.json");
 const FOOD_PATTERN =
   /grocer|grocery|food|drink|beverage|snack|meal|coffee|tea|juice|soda|cola|chips|chocolate|cookie|biscuit|rice|oil|masala|spice|sauce|noodle|pasta|bread|milk|cheese|butter|fruit|vegetable|honey/i;
 
+const normalizeProductPayload = (payload = {}) => {
+  const images = Array.isArray(payload.images)
+    ? payload.images.filter(Boolean)
+    : [];
+  const primaryImage = payload.image || images[0] || "";
+
+  return {
+    ...payload,
+    image: primaryImage,
+    images: images.length > 0 ? images : primaryImage ? [primaryImage] : [],
+  };
+};
+
 /* GET ALL PRODUCTS */
 router.get("/", async (req, res) => {
   try {
@@ -41,7 +54,7 @@ router.get("/:id", async (req, res) => {
 /* ADD PRODUCT */
 router.post("/", async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const product = await Product.create(normalizeProductPayload(req.body));
     res.status(201).json(product);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -79,7 +92,7 @@ router.post("/import", async (req, res) => {
     const seenInBatch = new Set();
 
     // only fresh products
-    const newProducts = products.filter((p) => {
+    const newProducts = products.map(normalizeProductPayload).filter((p) => {
       if (!p?.name) return false;
       if (existingNames.has(p.name)) return false;
       if (seenInBatch.has(p.name)) return false;
@@ -127,7 +140,7 @@ router.post("/import-dummy", async (req, res) => {
     const existingNames = new Set(existing.map((p) => p.name));
     const seenInBatch = new Set();
 
-    const newProducts = LOCAL_DUMMY_PRODUCTS.filter((p) => {
+    const newProducts = LOCAL_DUMMY_PRODUCTS.map(normalizeProductPayload).filter((p) => {
       if (!p?.name) return false;
       if (existingNames.has(p.name)) return false;
       if (seenInBatch.has(p.name)) return false;
@@ -224,7 +237,7 @@ router.put("/:id", async (req, res) => {
   try {
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      normalizeProductPayload(req.body),
       { new: true }
     );
 

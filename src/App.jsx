@@ -4,6 +4,7 @@ import "./App.css";
 
 import { AuthProvider }    from "./context/AuthContext";
 import { CartProvider }    from "./context/CartContext";
+import { DiscountProvider } from "./context/DiscountContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { CompareProvider } from "./context/CompareContext";
 import { NotificationsProvider } from "./context/NotificationsContext";
@@ -92,17 +93,19 @@ export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <WishlistProvider>
-          <CompareProvider>
-            <NotificationsProvider>
-              <AppProvider>
-                <ErrorBoundary>
-                  <Router />
-                </ErrorBoundary>
-              </AppProvider>
-            </NotificationsProvider>
-          </CompareProvider>
-        </WishlistProvider>
+        <DiscountProvider>
+          <WishlistProvider>
+            <CompareProvider>
+              <NotificationsProvider>
+                <AppProvider>
+                  <ErrorBoundary>
+                    <Router />
+                  </ErrorBoundary>
+                </AppProvider>
+              </NotificationsProvider>
+            </CompareProvider>
+          </WishlistProvider>
+        </DiscountProvider>
       </CartProvider>
     </AuthProvider>
   );

@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useDiscount } from "../context/DiscountContext";
+import { useNotifications } from "../context/NotificationsContext";
 import { useApp } from "../context/AppContext";
-import { fmt, getProductKey, uid, getOrders, setOrders } from "../utils/helpers";
+import { fmt, getProductKey } from "../utils/helpers";
 import styles from "./Checkout.module.css";
 
 const PAYMENT_OPTIONS = [
@@ -16,6 +18,8 @@ const PAYMENT_OPTIONS = [
 export default function Checkout() {
   const { cart, total, clearCart } = useCart();
   const { user }                   = useAuth();
+  const { coupon, getDiscountAmount, removeCoupon } = useDiscount();
+  const { pushNotification } = useNotifications();
   const { navigate, toast }        = useApp();
   const savedAddresses = user?.addresses || [];
   const defaultAddress = savedAddresses.find((address) => address.isDefault) || savedAddresses[0] || null;
@@ -36,8 +40,9 @@ export default function Checkout() {
   });
 
   const shippingFee = total >= 999 ? 0 : 99;
+  const discount    = getDiscountAmount(total, shippingFee);
   const tax         = Math.round(total * 0.18);
-  const grand       = total + shippingFee + tax;
+  const grand       = Math.max(0, total + shippingFee + tax - discount);
 
   if (!cart.length) { navigate("home"); return null; }
 
@@ -90,6 +95,8 @@ const placeOrder = async () => {
       })),
       subtotal: total,
       shippingFee,
+      discount,
+      couponCode: coupon?.code || "",
       tax,
       total: grand,
       status: "Placed",
@@ -114,8 +121,17 @@ const placeOrder = async () => {
 
     localStorage.removeItem(`sc_cart_${currentUser._id}`);
     clearCart();
+    if (coupon) {
+      removeCoupon();
+    }
 
     toast("🎉 Order placed successfully!", "success");
+    pushNotification({
+      title: "Order confirmed",
+      message: `Your order for ${fmt(grand)} has been placed successfully.`,
+      type: "success",
+      link: "orders",
+    });
     navigate("success");
   } catch (error) {
     console.error("❌ ORDER ERROR:", error);
@@ -282,6 +298,12 @@ const placeOrder = async () => {
                       <span>{fmt(item.price * item.qty)}</span>
                     </div>
                   ))}
+                  {coupon && (
+                    <div className={styles.reviewItem}>
+                      <span>Coupon ({coupon.code})</span>
+                      <span>-{fmt(discount)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.stepActions}>
@@ -324,10 +346,10 @@ const placeOrder = async () => {
 
             <hr className="divider" />
 
-            {[["Subtotal", fmt(total)], ["Shipping", shippingFee === 0 ? "FREE" : fmt(shippingFee)], ["Tax (18%)", fmt(tax)]].map(([l, v]) => (
+            {[["Subtotal", fmt(total)], ["Shipping", shippingFee === 0 ? "FREE" : fmt(shippingFee)], ...(discount > 0 ? [["Discount", `-${fmt(discount)}`]] : []), ["Tax (18%)", fmt(tax)]].map(([l, v]) => (
               <div key={l} className={styles.summaryRow}>
                 <span>{l}</span>
-                <span style={{ color: v === "FREE" ? "var(--success)" : undefined }}>{v}</span>
+                <span style={{ color: v === "FREE" ? "var(--success)" : l === "Discount" ? "var(--success)" : undefined }}>{v}</span>
               </div>
             ))}
 
