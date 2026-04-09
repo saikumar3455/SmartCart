@@ -1,6 +1,7 @@
 import express from "express";
 import Product from "../models/Product.js";
 import CURATED_DUMMY_PRODUCTS from "../data/curatedDummyProducts.js";
+import SEED_PRODUCTS from "../../src/data/products.js";
 
 const router = express.Router();
 
@@ -107,15 +108,15 @@ router.post("/import", async (req, res) => {
 
 router.post("/import-dummy", async (req, res) => {
   try {
+    const seedNames = new Set(SEED_PRODUCTS.map((product) => product.name));
+
     await Product.deleteMany({
       $or: [
         { source: "dummyjson" },
         { source: "curated-catalog" },
         {
-          $and: [
-            { source: { $exists: false } },
-            { id: { $gte: 13, $lte: 500 } },
-          ],
+          id: { $type: "number" },
+          name: { $nin: Array.from(seedNames) },
         },
       ],
     });
