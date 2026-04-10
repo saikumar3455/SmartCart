@@ -175,6 +175,12 @@ export default function OrderDetail() {
                     <span>Tax</span>
                     <span>{fmt(order.tax || 0)}</span>
                   </div>
+                  {order.preBookingCredit > 0 && (
+                    <div className={styles.summaryRow}>
+                      <span>Pre-booking credit</span>
+                      <span>-{fmt(order.preBookingCredit)}</span>
+                    </div>
+                  )}
                   <hr className="divider" />
                   <div className={styles.grandTotal}>
                     <span>Total</span>

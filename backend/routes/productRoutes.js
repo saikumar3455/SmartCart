@@ -2,6 +2,7 @@ import express from "express";
 import { createRequire } from "module";
 import Product from "../models/Product.js";
 import SEED_PRODUCTS from "../../src/data/products.js";
+import { expireExpiredPreBookings } from "../utils/preBookingUtils.js";
 
 const router = express.Router();
 const require = createRequire(import.meta.url);
@@ -26,6 +27,7 @@ const normalizeProductPayload = (payload = {}) => {
 /* GET ALL PRODUCTS */
 router.get("/", async (req, res) => {
   try {
+    await expireExpiredPreBookings();
     const products = await Product.find();
     res.json(products);
   } catch (error) {
@@ -35,6 +37,7 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
+    await expireExpiredPreBookings();
     const { id } = req.params;
 
     const product =

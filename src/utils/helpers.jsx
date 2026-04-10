@@ -97,6 +97,28 @@ export const getCouponDiscount = (coupon, subtotal, shipping = 0) => {
   return Math.min(subtotal, coupon.value || 0);
 };
 
+export const getPreBookingCredit = (cartItems = [], bookings = []) => {
+  let totalCredit = 0;
+
+  cartItems.forEach((item) => {
+    let remainingQty = Number(item.quantity || item.qty || 1);
+    const matchingBookings = bookings
+      .filter((booking) => booking.status === "active" || booking.status === "partial")
+      .filter((booking) => String(booking.productId) === String(item._id || item.id || item.productId));
+
+    matchingBookings.forEach((booking) => {
+      if (remainingQty <= 0 || Number(booking.remainingQuantity || 0) <= 0) return;
+
+      const consumedQty = Math.min(remainingQty, Number(booking.remainingQuantity || 0));
+      const perUnitAdvance = Number(booking.remainingAdvanceAmount || 0) / Number(booking.remainingQuantity || 1);
+      totalCredit += Math.round(perUnitAdvance * consumedQty);
+      remainingQty -= consumedQty;
+    });
+  });
+
+  return totalCredit;
+};
+
 export const getUrgencyMeta = (product) => {
   const stock = Number(product?.stock || 0);
   const reviews = Number(product?.reviews || 0);

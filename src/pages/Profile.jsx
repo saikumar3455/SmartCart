@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
@@ -30,10 +30,21 @@ export default function Profile() {
     phone: user?.phone || "",
   });
   const [editingAddressId, setEditingAddressId] = useState("");
+  const [preBookings, setPreBookings] = useState([]);
 
   const orders = getOrders().filter((o) => o.userId === user?.id || o.userEmail === user?.email);
   const totalSpent = orders.reduce((a, o) => a + o.total, 0);
   const addresses = user?.addresses || [];
+  const activePreBookings = preBookings.filter((item) => item.status === "active" || item.status === "partial");
+
+  useEffect(() => {
+    if (!user?.email) return;
+
+    fetch(`https://smartcart-api-2ogq.onrender.com/api/prebookings?userEmail=${encodeURIComponent(user.email)}`)
+      .then((res) => res.json())
+      .then((data) => setPreBookings(Array.isArray(data) ? data : []))
+      .catch((error) => console.log("pre-bookings fetch error", error));
+  }, [user?.email]);
 
   const persistUser = (updatedUser) => {
     const users = getUsers();
@@ -181,6 +192,7 @@ export default function Profile() {
             ["📦", "Total Orders", orders.length],
             ["💰", "Total Spent",  fmt(totalSpent)],
             ["♡", "Wishlist Items", wishlistCount],
+            ["⏳", "Pre-Bookings", activePreBookings.length],
           ].map(([icon, label, val]) => (
             <div key={label} className={styles.statCard}>
               <div className={styles.statIcon}>{icon}</div>
@@ -308,6 +320,49 @@ export default function Profile() {
             </div>
           ) : (
             <div className={styles.addressEmpty}>No saved addresses yet. Add one for faster checkout.</div>
+          )}
+        </div>
+
+        <div className={styles.addressSection}>
+          <div className={styles.addressHeader}>
+            <div>
+              <h2 className={styles.sectionTitle}>Pre-Bookings</h2>
+              <p className={styles.sectionSub}>Track active reservations and expired holds here.</p>
+            </div>
+            <span className="badge badge-dim">{preBookings.length} total</span>
+          </div>
+
+          {preBookings.length > 0 ? (
+            <div className={styles.addressList}>
+              {preBookings.map((booking) => (
+                <div key={booking._id} className={styles.addressCard}>
+                  <div className={styles.addressCardTop}>
+                    <div className={styles.addressMeta}>
+                      <h3>{booking.productName}</h3>
+                      <span className={`badge badge-${booking.status === "expired" ? "dim" : "accent"}`}>
+                        {booking.status}
+                      </span>
+                    </div>
+                    <div className={styles.addressButtons}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => navigate(`product/${booking.productId}`)}>
+                        View Product
+                      </button>
+                    </div>
+                  </div>
+                  <p className={styles.addressText}>
+                    Qty reserved: {booking.quantity} · Remaining hold: {booking.remainingQuantity}
+                  </p>
+                  <p className={styles.addressText}>
+                    Advance: {fmt(booking.advanceAmount)} · Remaining credit: {fmt(booking.remainingAdvanceAmount || 0)}
+                  </p>
+                  <p className={styles.addressText}>
+                    Expires on {new Date(booking.expiresAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.addressEmpty}>No pre-bookings yet. Reserve products from the product page.</div>
           )}
         </div>
 

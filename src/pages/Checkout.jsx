@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useDiscount } from "../context/DiscountContext";
 import { useNotifications } from "../context/NotificationsContext";
 import { useApp } from "../context/AppContext";
-import { fmt, getProductKey } from "../utils/helpers";
+import { fmt, getPreBookingCredit, getProductKey } from "../utils/helpers";
 import styles from "./Checkout.module.css";
 
 const PAYMENT_OPTIONS = [
@@ -28,6 +28,7 @@ export default function Checkout() {
   const [err, setErr]         = useState("");
   const [loading, setLoading] = useState(false);
   const [payment, setPayment] = useState("cod");
+  const [preBookings, setPreBookings] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(defaultAddress?.id || "");
   const [shipping, setShipping] = useState({
     name: defaultAddress?.fullName || user?.name || "",
@@ -41,8 +42,9 @@ export default function Checkout() {
 
   const shippingFee = total >= 999 ? 0 : 99;
   const discount    = getDiscountAmount(total, shippingFee);
+  const preBookingCredit = getPreBookingCredit(cart, preBookings);
   const tax         = Math.round(total * 0.18);
-  const grand       = Math.max(0, total + shippingFee + tax - discount);
+  const grand       = Math.max(0, total + shippingFee + tax - discount - preBookingCredit);
 
   if (!cart.length) { navigate("home"); return null; }
 
@@ -73,6 +75,15 @@ export default function Checkout() {
       pincode: selected.pincode,
     }));
   }, [selectedAddressId, savedAddresses, user]);
+
+  useEffect(() => {
+    if (!user?.email) return;
+
+    fetch(`${API}/api/prebookings?userEmail=${encodeURIComponent(user.email)}`)
+      .then((res) => res.json())
+      .then((data) => setPreBookings(Array.isArray(data) ? data : []))
+      .catch((error) => console.log("pre-booking fetch error", error));
+  }, [user?.email]);
 
 const saveOrder = async (orderData) => {
   const res = await fetch(`${API}/api/orders`, {
@@ -111,6 +122,7 @@ const buildOrderData = (currentUser, paymentMeta = {}) => ({
   shippingFee,
   discount,
   couponCode: coupon?.code || "",
+  preBookingCredit,
   tax,
   total: grand,
   status: "Placed",
@@ -329,6 +341,12 @@ const placeOrder = async () => {
                       <span>-{fmt(discount)}</span>
                     </div>
                   )}
+                  {preBookingCredit > 0 && (
+                    <div className={styles.reviewItem}>
+                      <span>Pre-booking credit</span>
+                      <span>-{fmt(preBookingCredit)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.stepActions}>
@@ -371,10 +389,10 @@ const placeOrder = async () => {
 
             <hr className="divider" />
 
-            {[["Subtotal", fmt(total)], ["Shipping", shippingFee === 0 ? "FREE" : fmt(shippingFee)], ...(discount > 0 ? [["Discount", `-${fmt(discount)}`]] : []), ["Tax (18%)", fmt(tax)]].map(([l, v]) => (
+            {[["Subtotal", fmt(total)], ["Shipping", shippingFee === 0 ? "FREE" : fmt(shippingFee)], ...(discount > 0 ? [["Discount", `-${fmt(discount)}`]] : []), ...(preBookingCredit > 0 ? [["Pre-booking credit", `-${fmt(preBookingCredit)}`]] : []), ["Tax (18%)", fmt(tax)]].map(([l, v]) => (
               <div key={l} className={styles.summaryRow}>
                 <span>{l}</span>
-                <span style={{ color: v === "FREE" ? "var(--success)" : l === "Discount" ? "var(--success)" : undefined }}>{v}</span>
+                <span style={{ color: v === "FREE" ? "var(--success)" : l === "Discount" || l === "Pre-booking credit" ? "var(--success)" : undefined }}>{v}</span>
               </div>
             ))}
 

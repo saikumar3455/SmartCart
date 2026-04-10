@@ -26,6 +26,10 @@ const orderSchema = new mongoose.Schema(
     },
     couponCode: String,
     discount: Number,
+    preBookingCredit: {
+      type: Number,
+      default: 0,
+    },
     razorpayOrderId: String,
     razorpayPaymentId: String,
     

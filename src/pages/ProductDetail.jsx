@@ -23,7 +23,11 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(!selectedProduct);
   const [error, setError] = useState("");
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [preBookingDate, setPreBookingDate] = useState("");
+  const [preBookingLoading, setPreBookingLoading] = useState(false);
+  const [existingPreBooking, setExistingPreBooking] = useState(null);
   const productId = page.startsWith("product/") ? page.replace("product/", "") : "";
+  const API = "https://smartcart-api-2ogq.onrender.com";
 
   useEffect(() => {
     if (selectedProduct && getProductKey(selectedProduct) === productId) {
@@ -108,6 +112,24 @@ export default function ProductDetails() {
     loadRelatedProducts();
   }, [product]);
 
+  useEffect(() => {
+    if (!user?.email || !product?._id) return;
+
+    fetch(`${API}/api/prebookings?userEmail=${encodeURIComponent(user.email)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const activeBooking = Array.isArray(data)
+          ? data.find(
+              (item) =>
+                String(item.productId) === String(product._id) &&
+                (item.status === "active" || item.status === "partial")
+            )
+          : null;
+        setExistingPreBooking(activeBooking || null);
+      })
+      .catch((err) => console.log("pre-booking status error", err));
+  }, [user?.email, product?._id]);
+
   if (loading) {
     return (
       <div className={styles.page}>
@@ -148,6 +170,13 @@ export default function ProductDetails() {
     : product.image
       ? [product.image]
       : [];
+  const advanceAmount = Math.round(Number(product.price || 0) * 0.1 * qty);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + 7);
+  const minDateValue = tomorrow.toISOString().split("T")[0];
+  const maxDateValue = maxDate.toISOString().split("T")[0];
 
   const handleAdd = () => {
     for (let i = 0; i < qty; i++) addToCart(product);
@@ -166,6 +195,46 @@ export default function ProductDetails() {
     "🔒 100% Secure payments",
     "✅ Genuine product guarantee",
   ];
+
+  const handlePreBook = async () => {
+    if (!preBookingDate) {
+      toast("Choose a valid expiry date for pre-booking", "error");
+      return;
+    }
+
+    try {
+      setPreBookingLoading(true);
+      const res = await fetch(`${API}/api/prebookings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?._id,
+          userEmail: user?.email,
+          productId: product._id,
+          quantity: qty,
+          expiresAt: new Date(`${preBookingDate}T23:59:59`).toISOString(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Pre-booking failed");
+
+      setExistingPreBooking(data.booking);
+      setProduct((prev) => (prev ? { ...prev, stock: prev.stock - qty } : prev));
+      pushNotification({
+        title: "Pre-booking confirmed",
+        message: `${product.name} is reserved for you until ${new Date(data.booking.expiresAt).toLocaleDateString()}.`,
+        type: "success",
+        link: "profile",
+      });
+      toast(`Pre-booked with ${fmt(data.booking.advanceAmount)} advance`, "success");
+    } catch (error) {
+      console.log(error);
+      toast(error.message || "Failed to pre-book product", "error");
+    } finally {
+      setPreBookingLoading(false);
+    }
+  };
 
   return (
     <div className={styles.page}>
@@ -296,6 +365,52 @@ export default function ProductDetails() {
                 onClick={() => { handleAdd(); navigate("cart"); }}>
                 Buy Now →
               </button>
+            </div>
+
+            <div className={styles.preBookCard}>
+              <div className={styles.preBookHeader}>
+                <div>
+                  <p className={styles.preBookEyebrow}>Reserve this product</p>
+                  <h3 className={styles.preBookTitle}>Pre-book for 10% advance</h3>
+                </div>
+                <span className="badge badge-accent">{fmt(advanceAmount)}</span>
+              </div>
+              {existingPreBooking ? (
+                <div className={styles.preBookStatus}>
+                  <p>
+                    Reserved until <strong>{new Date(existingPreBooking.expiresAt).toLocaleDateString()}</strong>
+                  </p>
+                  <p>
+                    Advance paid: <strong>{fmt(existingPreBooking.advanceAmount)}</strong>
+                  </p>
+                  <p>
+                    Buy before expiry to get this amount adjusted in your final order.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className={styles.preBookCopy}>
+                    Reserve your selected quantity for up to 7 days. If you complete the purchase before expiry, the advance is adjusted in checkout. If you do not, the reservation expires and the advance is forfeited.
+                  </p>
+                  <div className={styles.preBookForm}>
+                    <input
+                      type="date"
+                      value={preBookingDate}
+                      min={minDateValue}
+                      max={maxDateValue}
+                      onChange={(e) => setPreBookingDate(e.target.value)}
+                      className={styles.preBookDate}
+                    />
+                    <button
+                      className="btn btn-outline"
+                      disabled={product.stock === 0 || preBookingLoading}
+                      onClick={handlePreBook}
+                    >
+                      {preBookingLoading ? "Reserving..." : "Pre-Book Now"}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className={styles.perks}>

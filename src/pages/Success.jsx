@@ -49,6 +49,13 @@ export default function Success() {
 
             <hr className="divider" />
 
+            {last.preBookingCredit > 0 && (
+              <div className={styles.totalRow}>
+                <span>Pre-booking credit used</span>
+                <span className={styles.totalAmt}>-{fmt(last.preBookingCredit)}</span>
+              </div>
+            )}
+
             <div className={styles.totalRow}>
               <span>Total Paid</span>
               <span className={styles.totalAmt}>{fmt(last.total)}</span>

@@ -1,6 +1,8 @@
 import express from "express";
 import crypto from "crypto";
 import Order from "../models/Order.js";
+import PreBooking from "../models/PreBooking.js";
+import { expireExpiredPreBookings } from "../utils/preBookingUtils.js";
 
 const router = express.Router();
 
@@ -73,7 +75,61 @@ router.post("/verify-razorpay-payment", async (req, res) => {
 // create order
 router.post("/", async (req, res) => {
   try {
-    const order = await Order.create(req.body);
+    await expireExpiredPreBookings();
+
+    const payload = { ...req.body };
+    let preBookingCredit = 0;
+
+    if (payload.userEmail && Array.isArray(payload.items) && payload.items.length > 0) {
+      const activeBookings = await PreBooking.find({
+        userEmail: String(payload.userEmail).toLowerCase(),
+        status: { $in: ["active", "partial"] },
+        remainingQuantity: { $gt: 0 },
+      }).sort({ expiresAt: 1 });
+
+      for (const item of payload.items) {
+        let remainingQty = Number(item.quantity || item.qty || 1);
+        const matchingBookings = activeBookings.filter(
+          (booking) => String(booking.productId) === String(item.productId)
+        );
+
+        for (const booking of matchingBookings) {
+          if (remainingQty <= 0 || booking.remainingQuantity <= 0) continue;
+
+          const consumedQty = Math.min(remainingQty, booking.remainingQuantity);
+          const perUnitAdvance = booking.remainingQuantity
+            ? booking.remainingAdvanceAmount / booking.remainingQuantity
+            : 0;
+          const consumedAdvance = Math.round(perUnitAdvance * consumedQty);
+
+          booking.remainingQuantity -= consumedQty;
+          booking.remainingAdvanceAmount = Math.max(0, booking.remainingAdvanceAmount - consumedAdvance);
+          booking.appliedAdvanceAmount += consumedAdvance;
+          booking.status = booking.remainingQuantity === 0 ? "converted" : "partial";
+
+          preBookingCredit += consumedAdvance;
+          remainingQty -= consumedQty;
+          await booking.save();
+        }
+      }
+    }
+
+    payload.preBookingCredit = preBookingCredit;
+    payload.total = Math.max(0, Number(payload.total || 0));
+
+    const order = await Order.create(payload);
+
+    if (preBookingCredit > 0) {
+      await PreBooking.updateMany(
+        {
+          userEmail: String(payload.userEmail).toLowerCase(),
+          status: "converted",
+          convertedOrderId: null,
+        },
+        { $set: { convertedOrderId: order._id } }
+      );
+    }
+
     res.status(201).json(order);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -83,6 +139,7 @@ router.post("/", async (req, res) => {
 // get all orders
 router.get("/", async (req, res) => {
   try {
+    await expireExpiredPreBookings();
     const orders = await Order.find().sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
@@ -92,6 +149,7 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
+    await expireExpiredPreBookings();
     const order = await Order.findById(req.params.id);
 
     if (!order) {
