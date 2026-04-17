@@ -10,10 +10,24 @@ import styles from "./Checkout.module.css";
 
 const PAYMENT_OPTIONS = [
   { val: "cod",        label: "💵 Cash on Delivery",    sub: "Pay when your order arrives"        },
-  { val: "upi",        label: "📱 UPI / QR Code",       sub: "Mock PhonePe, Google Pay, Paytm demo flow" },
-  { val: "card",       label: "💳 Credit / Debit Card", sub: "Mock Visa, Mastercard, RuPay demo flow" },
-  { val: "netbanking", label: "🏦 Net Banking",         sub: "Mock online banking flow for project review" },
+  { val: "upi",        label: "📱 UPI / QR Code",       sub: "Pay using UPI apps through Razorpay Test Mode" },
+  { val: "card",       label: "💳 Credit / Debit Card", sub: "Pay using test cards through Razorpay" },
+  { val: "netbanking", label: "🏦 Net Banking",         sub: "Use Razorpay test banking flow" },
 ];
+
+const loadRazorpayScript = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 
 export default function Checkout() {
   const { cart, total, clearCart } = useCart();
@@ -137,20 +151,102 @@ const placeOrder = async () => {
     const currentUser = JSON.parse(localStorage.getItem("sc_user"));
 
     if (payment !== "cod") {
-      const confirmed = window.confirm(
-        `Demo payment of ${fmt(grand)} via ${PAYMENT_OPTIONS.find((option) => option.val === payment)?.label || "Online Payment"}\n\nThis is a mock online payment for project review only. Click OK to simulate a successful payment.`
-      );
+      const scriptLoaded = await loadRazorpayScript();
 
-      if (!confirmed) {
-        throw new Error("Demo payment cancelled");
+      if (!scriptLoaded) {
+        throw new Error("Failed to load Razorpay checkout");
       }
 
-      const orderData = buildOrderData(currentUser, {
-        orderId: `demo_order_${Date.now()}`,
-        paymentId: `demo_pay_${Date.now()}`,
+      const orderRes = await fetch(`${API}/api/orders/create-razorpay-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: grand * 100,
+          currency: "INR",
+          receipt: `smartcart_${Date.now()}`,
+          notes: {
+            customer: currentUser.email,
+            selectedPaymentMethod: payment,
+          },
+        }),
       });
 
-      await saveOrder(orderData);
+      const orderPayload = await orderRes.json();
+      if (!orderRes.ok) {
+        throw new Error(orderPayload.message || "Failed to initialize Razorpay");
+      }
+
+      await new Promise((resolve, reject) => {
+        const razorpay = new window.Razorpay({
+          key: orderPayload.key,
+          amount: orderPayload.amount,
+          currency: orderPayload.currency,
+          name: "SmartCart",
+          description: "SmartCart Test Payment",
+          order_id: orderPayload.orderId,
+          theme: { color: "#1e88ff" },
+          prefill: {
+            name: currentUser.name,
+            email: currentUser.email,
+            contact: shipping.phone,
+          },
+          config: {
+            display: {
+              blocks: {
+                preferred: {
+                  name: "Pay Using",
+                  instruments:
+                    payment === "upi"
+                      ? [{ method: "upi" }]
+                      : payment === "card"
+                        ? [{ method: "card" }]
+                        : payment === "netbanking"
+                          ? [{ method: "netbanking" }]
+                          : [],
+                },
+              },
+              sequence: ["block.preferred"],
+              preferences: {
+                show_default_blocks: true,
+              },
+            },
+          },
+          notes: {
+            mode: "Test payment only",
+          },
+          handler: async function (response) {
+            try {
+              const verifyRes = await fetch(`${API}/api/orders/verify-razorpay-payment`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(response),
+              });
+
+              const verifyData = await verifyRes.json();
+              if (!verifyRes.ok || !verifyData.verified) {
+                throw new Error(verifyData.message || "Payment verification failed");
+              }
+
+              const orderData = buildOrderData(currentUser, {
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+              });
+
+              await saveOrder(orderData);
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              reject(new Error("Payment cancelled"));
+            },
+          },
+        });
+
+        razorpay.open();
+      });
     } else {
       const orderData = buildOrderData(currentUser);
       await saveOrder(orderData);
