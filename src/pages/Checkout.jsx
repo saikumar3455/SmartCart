@@ -10,7 +10,7 @@ import styles from "./Checkout.module.css";
 
 const PAYMENT_OPTIONS = [
   { val: "cod",        label: "💵 Cash on Delivery",    sub: "Pay when your order arrives"        },
-  { val: "upi",        label: "📱 UPI / QR Code",       sub: "Pay using UPI apps through Razorpay Test Mode" },
+  { val: "upi",        label: "📱 UPI / QR Code",       sub: "Use UPI ID, QR, or supported UPI apps through Razorpay Test Mode" },
   { val: "card",       label: "💳 Credit / Debit Card", sub: "Pay using test cards through Razorpay" },
   { val: "netbanking", label: "🏦 Net Banking",         sub: "Use Razorpay test banking flow" },
 ];
